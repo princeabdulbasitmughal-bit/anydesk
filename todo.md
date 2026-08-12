@@ -1,0 +1,22 @@
+# Project TODO
+
+- [x] Define the authenticated research data model for experiments, datasets, model configurations, runs, metrics, findings, and report exports.
+- [x] Create an authorized-researcher dashboard with an experiment overview, recent runs, and key metrics.
+- [x] Implement dataset upload, storage, listing, and previews with CSV, JSON, and HDF5 as the only accepted formats.
+- [x] Implement model configuration management for Hugging Face particle-tracking models, hyperparameters, and saved configurations.
+- [ ] Implement training and inference run management with run statuses limited to queued, running, completed, and failed.
+- [x] Persist and present per-run accuracy, efficiency, fake rate, and related evaluation metrics.
+- [x] Create two-dimensional and three-dimensional reconstructed-track scatter visualizations from inference output.
+- [x] Add per-experiment rich-text research findings with Markdown and PDF report exports only.
+- [x] Store dataset files, model artifacts, and exported reports in managed file storage.
+- [x] Restrict platform access to authenticated and authorized researchers.
+- [x] Add an AI research assistant for run-data questions, hyperparameter suggestions, findings summaries, and research-paper drafting.
+- [ ] Send a platform-owner email notification whenever a run is completed or failed, including a key-metrics summary.
+- [x] Apply a polished, professional scientific-research visual system across all screens.
+- [x] Write and run automated tests for backend behaviour and key data contracts.
+- [x] Validate core workflows, responsive rendering, and deployment readiness.
+- [x] Implement inference-output ingestion that stores reconstructed track points for the 2D and 3D viewers.
+- [x] Implement managed storage persistence for model artifacts returned by completed training runs.
+- [x] Add an explicit unauthorized-researcher access state in the frontend for protected-data failures.
+- [x] Verify authenticated dataset upload, configuration save, run trigger, findings save, report export, and AI-assistant workflows, then run a production build.
+- [x] Run and confirm the authenticated backend workflow test suite for dataset upload, configuration save, run trigger, findings save, report export, AI assistant, and access rejection.

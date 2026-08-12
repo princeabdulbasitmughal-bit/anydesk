@@ -1,42 +1,39 @@
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { ResearchProvider } from "@/contexts/ResearchContext";
+import Assistant from "@/pages/Assistant";
+import Datasets from "@/pages/Datasets";
+import Findings from "@/pages/Findings";
+import Home from "@/pages/Home";
+import Models from "@/pages/Models";
 import NotFound from "@/pages/NotFound";
+import Results from "@/pages/Results";
+import Runs from "@/pages/Runs";
+import Tracks from "@/pages/Tracks";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Route, Switch } from "wouter";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+
+function ResearchPage({ children }: { children: React.ReactNode }) {
+  return <ResearchProvider><DashboardLayout>{children}</DashboardLayout></ResearchProvider>;
+}
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
-  return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
-  );
+  return <Switch>
+    <Route path="/">{() => <ResearchPage><Home /></ResearchPage>}</Route>
+    <Route path="/datasets">{() => <ResearchPage><Datasets /></ResearchPage>}</Route>
+    <Route path="/models">{() => <ResearchPage><Models /></ResearchPage>}</Route>
+    <Route path="/runs">{() => <ResearchPage><Runs /></ResearchPage>}</Route>
+    <Route path="/results">{() => <ResearchPage><Results /></ResearchPage>}</Route>
+    <Route path="/tracks">{() => <ResearchPage><Tracks /></ResearchPage>}</Route>
+    <Route path="/findings">{() => <ResearchPage><Findings /></ResearchPage>}</Route>
+    <Route path="/assistant">{() => <ResearchPage><Assistant /></ResearchPage>}</Route>
+    <Route path="/404" component={NotFound} />
+    <Route component={NotFound} />
+  </Switch>;
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
-function App() {
-  return (
-    <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
-  );
+export default function App() {
+  return <ErrorBoundary><ThemeProvider defaultTheme="dark"><TooltipProvider><Toaster /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
-
-export default App;
