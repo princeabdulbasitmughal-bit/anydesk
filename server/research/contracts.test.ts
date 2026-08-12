@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createDatasetPreview, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
 import { makeResearchMarkdown } from "./reports";
+import { applicationStatus, hostedJobFromHyperparameters, jobPayload } from "./huggingface";
 
 describe("research dataset contracts", () => {
   it("creates a preview for a valid CSV dataset", () => {
@@ -35,5 +36,14 @@ describe("research dataset contracts", () => {
     expect(report).toContain("# Detector reconstruction");
     expect(report).toContain("No findings have been recorded");
     expect(report).toContain("| 12 | inference | completed |");
+  });
+
+  it("creates the official Jobs payload shape and maps remote stages to supported application statuses", () => {
+    const job = hostedJobFromHyperparameters('{"_huggingFaceJob":{"image":"python:3.12","command":["python","train.py"],"timeout":"30m"}}');
+    expect(jobPayload(job!, "particle-track-run-9")).toMatchObject({ dockerImage: "python:3.12", command: ["python", "train.py"], timeoutSeconds: 1800, flavor: "cpu-basic" });
+    expect(applicationStatus("SCHEDULING")).toBe("queued");
+    expect(applicationStatus("RUNNING")).toBe("running");
+    expect(applicationStatus("COMPLETED")).toBe("completed");
+    expect(applicationStatus("ERROR")).toBe("failed");
   });
 });

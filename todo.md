@@ -20,3 +20,6 @@
 - [x] Add an explicit unauthorized-researcher access state in the frontend for protected-data failures.
 - [x] Verify authenticated dataset upload, configuration save, run trigger, findings save, report export, and AI-assistant workflows, then run a production build.
 - [x] Run and confirm the authenticated backend workflow test suite for dataset upload, configuration save, run trigger, findings save, report export, AI assistant, and access rejection.
+- [ ] Configure the single user-provided Hugging Face access token through secure project settings.
+- [ ] Connect the token to real hosted Hugging Face execution and verify non-fabricated run status, metric, track-point, and artifact handoff.
+- [x] Build a credential-ready Hugging Face Jobs submission and status-sync connector, with execution only enabled after the single token is securely configured.

@@ -54,6 +54,7 @@ describe("authenticated research workflows", () => {
     mocks.listRuns.mockResolvedValue([]);
     mocks.listMetrics.mockResolvedValue(undefined);
     mocks.storagePut.mockResolvedValue({ key: "research/file", url: "/manus-storage/research/file" });
+    mocks.createRun.mockResolvedValue([{ insertId: 12 }]);
     mocks.invokeLLM.mockResolvedValue({ choices: [{ message: { content: "No stored run metrics are available." } }] });
   });
 

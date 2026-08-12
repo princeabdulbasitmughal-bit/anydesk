@@ -15,6 +15,7 @@ import {
 } from "./contracts";
 import * as db from "./db";
 import { makeResearchMarkdown, makeResearchPdf } from "./reports";
+import { applicationStatus, hostedJobFromHyperparameters, inspectHostedJob, namespaceFor, submitHostedJob } from "./huggingface";
 
 const researcherProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "researcher" && ctx.user.role !== "admin") {
@@ -29,6 +30,29 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+async function refreshHostedRun(ownerId: number, run: Awaited<ReturnType<typeof db.getRun>>) {
+  const token = process.env.HF_TOKEN;
+  if (!token || !run?.huggingFaceJobId) return run;
+  const configuration = await db.getModelConfiguration(ownerId, run.experimentId, run.modelConfigurationId);
+  if (!configuration) return run;
+  const spec = hostedJobFromHyperparameters(configuration.hyperparameters);
+  if (!spec) return run;
+  try {
+    const remote = await inspectHostedJob(run.huggingFaceJobId, await namespaceFor(spec, token), token);
+    const status = applicationStatus(remote.status?.stage);
+    if (status !== run.status) {
+      await db.setRunStatus(ownerId, run.id, status, status === "failed" ? remote.status?.message : undefined);
+      if ((status === "completed" || status === "failed") && run.status !== "completed" && run.status !== "failed") {
+        await notifyOwner({ title: `Experiment run ${status}`, content: `Run ${run.id} is ${status}. Key metrics: no key metrics returned.` });
+      }
+      return db.getRun(ownerId, run.id);
+    }
+  } catch {
+    return run;
+  }
+  return run;
+}
 
 function dataMime(format: (typeof DATASET_FORMATS)[number]) {
   return { csv: "text/csv", json: "application/json", hdf5: "application/x-hdf5" }[format];
@@ -78,7 +102,12 @@ export const researchRouter = router({
     }),
   }),
   runs: router({
-    list: researcherProcedure.input(z.object({ experimentId: z.number().int().positive().optional() })).query(({ ctx, input }) => db.listRuns(ctx.user.id, input.experimentId)),
+    list: researcherProcedure.input(z.object({ experimentId: z.number().int().positive().optional() })).query(async ({ ctx, input }) => {
+      const runs = await db.listRuns(ctx.user.id, input.experimentId);
+      if (!process.env.HF_TOKEN) return runs;
+      const refreshed = await Promise.all(runs.map(run => refreshHostedRun(ctx.user.id, run)));
+      return refreshed.filter((run): run is NonNullable<typeof run> => Boolean(run));
+    }),
     trigger: researcherProcedure.input(z.object({ experimentId: z.number().int().positive(), datasetId: z.number().int().positive(), modelConfigurationId: z.number().int().positive(), runType: z.enum(["training", "inference"]) })).mutation(async ({ ctx, input }) => {
       const [experiment, dataset, configuration] = await Promise.all([
         db.getExperiment(ctx.user.id, input.experimentId),
@@ -86,7 +115,22 @@ export const researchRouter = router({
         db.getModelConfiguration(ctx.user.id, input.experimentId, input.modelConfigurationId),
       ]);
       if (!experiment || !dataset || !configuration) throw new TRPCError({ code: "BAD_REQUEST", message: "The selected experiment, dataset, and configuration must belong together." });
-      await db.createRun({ ownerId: ctx.user.id, experimentId: input.experimentId, datasetId: input.datasetId, modelConfigurationId: input.modelConfigurationId, runType: input.runType, status: "queued" });
+      const created = await db.createRun({ ownerId: ctx.user.id, experimentId: input.experimentId, datasetId: input.datasetId, modelConfigurationId: input.modelConfigurationId, runType: input.runType, status: "queued" });
+      const runId = Number(created[0].insertId);
+      const token = process.env.HF_TOKEN;
+      const hostedSpec = hostedJobFromHyperparameters(configuration.hyperparameters);
+      if (token && hostedSpec) {
+        try {
+          const submitted = await submitHostedJob(hostedSpec, token, `particle-track-run-${runId}`);
+          if (!submitted.id) throw new Error("Hugging Face Jobs did not return a job identifier.");
+          await db.setHostedRunSubmission(ctx.user.id, runId, submitted.id);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Hosted job submission failed.";
+          await db.setRunStatus(ctx.user.id, runId, "failed", message);
+          await notifyOwner({ title: "Experiment run failed", content: `Run ${runId} failed before remote execution. Key metrics: no key metrics returned.` });
+          return { success: false, status: "failed" as const, message };
+        }
+      }
       return { success: true, status: "queued" as const };
     }),
   }),

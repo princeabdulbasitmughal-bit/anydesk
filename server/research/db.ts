@@ -82,7 +82,22 @@ export async function getRun(ownerId: number, runId: number) {
 export async function createRun(values: typeof experimentRuns.$inferInsert) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
-  await db.insert(experimentRuns).values(values);
+  return db.insert(experimentRuns).values(values);
+}
+
+export async function setHostedRunSubmission(ownerId: number, runId: number, huggingFaceJobId: string) {
+  const database = await getDb();
+  if (!database) throw new Error("Database unavailable");
+  await database.update(experimentRuns).set({ huggingFaceJobId }).where(and(eq(experimentRuns.ownerId, ownerId), eq(experimentRuns.id, runId)));
+}
+
+export async function setRunStatus(ownerId: number, runId: number, status: "queued" | "running" | "completed" | "failed", errorMessage?: string) {
+  const database = await getDb();
+  if (!database) throw new Error("Database unavailable");
+  const updates: Partial<typeof experimentRuns.$inferInsert> = { status, errorMessage: errorMessage ?? null };
+  if (status === "running") updates.startedAt = new Date();
+  if (status === "completed" || status === "failed") updates.completedAt = new Date();
+  await database.update(experimentRuns).set(updates).where(and(eq(experimentRuns.ownerId, ownerId), eq(experimentRuns.id, runId)));
 }
 
 export async function recordRunOutcome(input: {
