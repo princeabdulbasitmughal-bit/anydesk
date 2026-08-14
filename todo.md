@@ -42,3 +42,4 @@
 - [x] Add an authenticated router test proving an oversized dataset payload is rejected before storage or binary decoding is reached.
 - [x] Verify runtime input-boundary safeguards after autonomous upload-hardening changes.
 - [x] Document the enabled Hugging Face connector scope and distinguish read-only research access from the platform's server-side hosted-job token requirement.
+- [x] Add reproducibility guidance for recording model revision, random seed, data revision, and exact execution command in saved configurations.

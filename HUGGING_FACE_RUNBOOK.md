@@ -22,6 +22,9 @@ The **Hugging Face model ID** field names the selected model. The hyperparameter
 {
   "learning_rate": 0.001,
   "batch_size": 64,
+  "modelRevision": "repository-commit-or-release",
+  "dataRevision": "dataset-version-or-hash",
+  "randomSeed": 42,
   "_huggingFaceJob": {
     "image": "registry.example.org/particle-tracker:latest",
     "command": ["python", "train.py", "--config", "/workspace/config.json"],
@@ -35,7 +38,7 @@ The **Hugging Face model ID** field names the selected model. The hyperparameter
 }
 ```
 
-The image and command must be supplied by the model repository or the research team. Valid `timeout` values use a numeric value with `s`, `m`, `h`, or `d`, such as `30m` or `2h`. If `namespace` is omitted, TrackLab resolves it from the token owner.
+The image and command must be supplied by the model repository or the research team. Record the exact model revision, dataset revision, random seed, image, command, and hyperparameters in this object before a real run. Valid `timeout` values use a numeric value with `s`, `m`, `h`, or `d`, such as `30m` or `2h`. If `namespace` is omitted, TrackLab resolves it from the token owner.
 
 ### Verified reference boundary
 
