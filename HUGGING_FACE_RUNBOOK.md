@@ -33,6 +33,10 @@ The **Hugging Face model ID** field names the selected model. The hyperparameter
 
 The image and command must be supplied by the model repository or the research team. Valid `timeout` values use a numeric value with `s`, `m`, `h`, or `d`, such as `30m` or `2h`. If `namespace` is omitted, TrackLab resolves it from the token owner.
 
+### Verified reference boundary
+
+The linked `jpata/particleflow` repository describes scalable end-to-end high-energy physics event reconstruction and lists model cards and associated data resources. Its public page states that it is not currently deployed by an Inference Provider, so TrackLab treats it only as a research reference—not as a click-to-run hosted inference model. The model page must be checked against the experiment's actual detector schema before use. [1]
+
 ## Run lifecycle
 
 | Hugging Face stage | TrackLab status | Interpretation |

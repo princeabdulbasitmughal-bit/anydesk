@@ -34,3 +34,4 @@
 - [x] Surface a verified Hugging Face HEP reconstruction-model reference in the model configuration workflow without auto-selecting or fabricating an execution setup.
 - [x] Complete a final no-fabrication and external-dependency boundary audit for datasets, model results, and owner alerts.
 - [x] Write and verify a project audit record covering empty research data, UI/result-ingestion safeguards, and remaining Hugging Face/email dependencies.
+- [x] Run a final credential-independent regression check after the latest UI guidance and audit updates.
