@@ -41,3 +41,4 @@
 - [x] Validate that oversized base64 dataset payloads are rejected before binary decoding.
 - [x] Add an authenticated router test proving an oversized dataset payload is rejected before storage or binary decoding is reached.
 - [x] Verify runtime input-boundary safeguards after autonomous upload-hardening changes.
+- [x] Document the enabled Hugging Face connector scope and distinguish read-only research access from the platform's server-side hosted-job token requirement.

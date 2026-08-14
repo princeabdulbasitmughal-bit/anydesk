@@ -8,6 +8,10 @@ TrackLab keeps the researcher interface, dataset records, model configurations, 
 
 The owner supplies one Hugging Face token as the `HF_TOKEN` project secret. The token must be authorized to resolve the account namespace and create, inspect, and manage Hugging Face Jobs. The same token is used for submission and status synchronization; no client browser ever receives it.
 
+### Connector boundary
+
+An enabled Hugging Face research connector may be used by the agent to inspect public model repositories, datasets, papers, and its own permitted Hub context. That connector is **not** a project secret and is not transferred to TrackLab's server runtime. TrackLab's server-side Jobs integration activates only through the separate `HF_TOKEN` project secret, which keeps account authorization isolated from browser and research-discovery workflows.
+
 > A model configuration without `_huggingFaceJob` remains valid for reproducibility, but its runs remain **queued** because TrackLab has no generic way to invent a detector-specific training container or command.
 
 ## Model configuration contract
