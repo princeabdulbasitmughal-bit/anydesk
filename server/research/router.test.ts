@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   listMetrics: vi.fn(),
   storagePut: vi.fn(),
   invokeLLM: vi.fn(),
+  hostedJobFromHyperparameters: vi.fn(),
+  submitHostedJob: vi.fn(),
 }));
 
 vi.mock("./db", () => ({
@@ -34,6 +36,16 @@ vi.mock("./db", () => ({
 vi.mock("../storage", () => ({ storagePut: mocks.storagePut }));
 vi.mock("../_core/llm", () => ({ invokeLLM: mocks.invokeLLM }));
 vi.mock("../_core/notification", () => ({ notifyOwner: vi.fn() }));
+vi.mock("./huggingface", () => ({
+  applicationStatus: vi.fn(),
+  fetchJobLogResult: vi.fn(),
+  hostedJobFromHyperparameters: mocks.hostedJobFromHyperparameters,
+  inspectHostedJob: vi.fn(),
+  namespaceFor: vi.fn(),
+  safeJobDiagnostic: vi.fn(),
+  shouldIngestCompletedResult: vi.fn(),
+  submitHostedJob: mocks.submitHostedJob,
+}));
 
 import { researchRouter } from "./router";
 
@@ -57,6 +69,7 @@ describe("authenticated research workflows", () => {
     mocks.storagePut.mockResolvedValue({ key: "research/file", url: "/manus-storage/research/file" });
     mocks.createRun.mockResolvedValue([{ insertId: 12 }]);
     mocks.invokeLLM.mockResolvedValue({ choices: [{ message: { content: "No stored run metrics are available." } }] });
+    mocks.hostedJobFromHyperparameters.mockReturnValue({ image: "registry.example.org/particle-tracker:latest", command: ["python", "train.py"] });
   });
 
   it("accepts a supported dataset, saves a model configuration, and queues a run", async () => {
@@ -71,6 +84,24 @@ describe("authenticated research workflows", () => {
     expect(mocks.createModelConfiguration).toHaveBeenCalledWith(expect.objectContaining({ hyperparameters: reproducibleConfiguration }));
     expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "training" }));
     expect(run).toEqual({ success: true, status: "queued" });
+  });
+
+  it("keeps an otherwise configured hosted run queued without submitting work when HF_TOKEN is absent", async () => {
+    const previousToken = process.env.HF_TOKEN;
+    delete process.env.HF_TOKEN;
+    mocks.getModelConfiguration.mockResolvedValue({ id: 9, experimentId: 4, hyperparameters: '{"_huggingFaceJob":{"image":"registry.example.org/particle-tracker:latest","command":["python","train.py"]}}' });
+    const caller = researchRouter.createCaller(context());
+
+    try {
+      await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, runType: "inference" }))
+        .resolves.toEqual({ success: true, status: "queued" });
+      expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "inference" }));
+      expect(mocks.hostedJobFromHyperparameters).toHaveBeenCalledOnce();
+      expect(mocks.submitHostedJob).not.toHaveBeenCalled();
+    } finally {
+      if (previousToken === undefined) delete process.env.HF_TOKEN;
+      else process.env.HF_TOKEN = previousToken;
+    }
   });
 
   it("rejects an oversized dataset payload before binary decoding or storage", async () => {

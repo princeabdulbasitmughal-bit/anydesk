@@ -56,3 +56,4 @@
 - [ ] Configure a verified outbound email provider/sender and validate completed/failed run emails with key-metrics summaries.
 - [x] Add automated coverage for completed and failed external-email delivery paths, including safe unconfigured-provider and rejected-provider fallbacks.
 - [x] Build a server-side credential-ready transactional-email adapter that preserves built-in owner alerts as a fallback.
+- [x] Add regression coverage proving that unconfigured external credentials cannot fabricate a hosted job submission or outbound email delivery. The hosted run stays queued without `HF_TOKEN`; the email adapter skips delivery without verified settings.
