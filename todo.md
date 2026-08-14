@@ -48,3 +48,5 @@
 - [x] Read back the reproducibility runbook and configuration UI guidance to confirm they match saved-configuration behavior and the HF_TOKEN boundary.
 - [x] Verify runtime health and the expected tracker-only workspace delta after memory-relief maintenance.
 - [x] Confirm that the only workspace change before the next checkpoint is the intentional todo tracker update.
+- [x] Verify post-checkpoint platform availability without introducing synthetic research records.
+- [x] Re-check research records after post-checkpoint availability verification to confirm no synthetic datasets, runs, metrics, findings, or reports were introduced.
