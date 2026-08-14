@@ -17,6 +17,7 @@ import {
 import * as db from "./db";
 import { makeResearchMarkdown, makeResearchPdf } from "./reports";
 import { applicationStatus, fetchJobLogResult, hostedJobFromHyperparameters, inspectHostedJob, namespaceFor, safeJobDiagnostic, shouldIngestCompletedResult, submitHostedJob } from "./huggingface";
+import { sendTerminalRunEmail } from "./email";
 
 const researcherProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "researcher" && ctx.user.role !== "admin") {
@@ -31,6 +32,11 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+async function notifyTerminalRunOutcome(input: { runId: number; status: "completed" | "failed"; metricSummary: string; errorMessage?: string }) {
+  await notifyOwner({ title: `Experiment run ${input.status}`, content: `Run ${input.runId} is ${input.status}. Key metrics: ${input.metricSummary}.` });
+  await sendTerminalRunEmail(input);
+}
 
 async function refreshHostedRun(ownerId: number, run: Awaited<ReturnType<typeof db.getRun>>) {
   const token = process.env.HF_TOKEN;
@@ -54,7 +60,7 @@ async function refreshHostedRun(ownerId: number, run: Awaited<ReturnType<typeof 
       }
       if ((status === "completed" || status === "failed") && run.status !== "completed" && run.status !== "failed") {
         const summary = result ? [result.accuracy !== undefined ? `accuracy ${result.accuracy}` : null, result.efficiency !== undefined ? `efficiency ${result.efficiency}` : null, result.fakeRate !== undefined ? `fake rate ${result.fakeRate}` : null].filter(Boolean).join(", ") || "no key metrics returned" : "no key metrics returned";
-        await notifyOwner({ title: `Experiment run ${status}`, content: `Run ${run.id} is ${status}. Key metrics: ${summary}.` });
+        await notifyTerminalRunOutcome({ runId: run.id, status, metricSummary: summary, errorMessage: status === "failed" ? remote.status?.message : undefined });
       }
       return db.getRun(ownerId, run.id);
     }
@@ -138,7 +144,7 @@ export const researchRouter = router({
         } catch (error) {
           const message = error instanceof Error ? error.message : "Hosted job submission failed.";
           await db.setRunStatus(ctx.user.id, runId, "failed", message);
-          await notifyOwner({ title: "Experiment run failed", content: `Run ${runId} failed before remote execution. Key metrics: no key metrics returned.` });
+          await notifyTerminalRunOutcome({ runId, status: "failed", metricSummary: "no key metrics returned", errorMessage: message });
           return { success: false, status: "failed" as const, message };
         }
       }
@@ -212,7 +218,7 @@ export const researchRouter = router({
         modelArtifactKey: artifact?.key,
         modelArtifactUrl: artifact?.url,
       });
-      await notifyOwner({ title: `Experiment run ${input.status}`, content: `Run ${run.id} is ${input.status}. Key metrics: ${metricSummary}.` });
+      await notifyTerminalRunOutcome({ runId: run.id, status: input.status, metricSummary, errorMessage: input.errorMessage });
       return { success: true };
     }),
   }),

@@ -54,4 +54,5 @@
 - [x] Perform a final lightweight service-health probe without mutating research data.
 - [x] Verify absence of new client runtime errors after autonomous maintenance checkpoints.
 - [ ] Configure a verified outbound email provider/sender and validate completed/failed run emails with key-metrics summaries.
-- [ ] Add automated coverage or documented verification for the completed and failed external-email delivery paths.
+- [x] Add automated coverage for completed and failed external-email delivery paths, including safe unconfigured-provider and rejected-provider fallbacks.
+- [x] Build a server-side credential-ready transactional-email adapter that preserves built-in owner alerts as a fallback.
