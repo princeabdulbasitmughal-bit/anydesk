@@ -4,14 +4,14 @@
 - [x] Create an authorized-researcher dashboard with an experiment overview, recent runs, and key metrics.
 - [x] Implement dataset upload, storage, listing, and previews with CSV, JSON, and HDF5 as the only accepted formats.
 - [x] Implement model configuration management for Hugging Face particle-tracking models, hyperparameters, and saved configurations.
-- [ ] Implement training and inference run management with run statuses limited to queued, running, completed, and failed.
+- [x] Implement training and inference run management with run statuses limited to queued, running, completed, and failed. Verified: authenticated run trigger, persistence, Hugging Face status mapping, and researcher UI all enforce the four-status lifecycle.
 - [x] Persist and present per-run accuracy, efficiency, fake rate, and related evaluation metrics.
 - [x] Create two-dimensional and three-dimensional reconstructed-track scatter visualizations from inference output.
 - [x] Add per-experiment rich-text research findings with Markdown and PDF report exports only.
 - [x] Store dataset files, model artifacts, and exported reports in managed file storage.
 - [x] Restrict platform access to authenticated and authorized researchers.
 - [x] Add an AI research assistant for run-data questions, hyperparameter suggestions, findings summaries, and research-paper drafting.
-- [ ] Send a platform-owner email notification whenever a run is completed or failed, including a key-metrics summary.
+- [ ] Send a platform-owner email notification whenever a run is completed or failed, including a key-metrics summary. The built-in owner-notification channel is wired for terminal outcomes, but actual external email delivery needs a verified outbound sender.
 - [x] Apply a polished, professional scientific-research visual system across all screens.
 - [x] Write and run automated tests for backend behaviour and key data contracts.
 - [x] Validate core workflows, responsive rendering, and deployment readiness.
@@ -53,3 +53,5 @@
 - [x] Verify post-audit code freshness and runtime response without adding research data; confirmed all research tables remain at zero records afterward.
 - [x] Perform a final lightweight service-health probe without mutating research data.
 - [x] Verify absence of new client runtime errors after autonomous maintenance checkpoints.
+- [ ] Configure a verified outbound email provider/sender and validate completed/failed run emails with key-metrics summaries.
+- [ ] Add automated coverage or documented verification for the completed and failed external-email delivery paths.
