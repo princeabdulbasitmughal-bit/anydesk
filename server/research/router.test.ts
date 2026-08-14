@@ -61,12 +61,14 @@ describe("authenticated research workflows", () => {
 
   it("accepts a supported dataset, saves a model configuration, and queues a run", async () => {
     const caller = researchRouter.createCaller(context());
+    const reproducibleConfiguration = '{"learning_rate":0.001,"modelRevision":"v1.2.0","dataRevision":"hits-2026-08","randomSeed":42}';
     await caller.datasets.upload({ experimentId: 4, fileName: "hits.csv", format: "csv", base64: Buffer.from("x,y,z\n1,2,3\n").toString("base64") });
-    await caller.modelConfigurations.create({ experimentId: 4, name: "Baseline", huggingFaceModelId: "lab/particle-tracker", hyperparameters: '{"learning_rate":0.001}' });
+    await caller.modelConfigurations.create({ experimentId: 4, name: "Baseline", huggingFaceModelId: "lab/particle-tracker", hyperparameters: reproducibleConfiguration });
     const run = await caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, runType: "training" });
     expect(mocks.storagePut).toHaveBeenCalledOnce();
     expect(mocks.createDataset).toHaveBeenCalledOnce();
     expect(mocks.createModelConfiguration).toHaveBeenCalledOnce();
+    expect(mocks.createModelConfiguration).toHaveBeenCalledWith(expect.objectContaining({ hyperparameters: reproducibleConfiguration }));
     expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "training" }));
     expect(run).toEqual({ success: true, status: "queued" });
   });
