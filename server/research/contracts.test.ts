@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createDatasetPreview, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
 import { makeResearchMarkdown } from "./reports";
-import { applicationStatus, hostedJobFromHyperparameters, jobPayload } from "./huggingface";
+import { applicationStatus, hostedJobFromHyperparameters, jobPayload, parseJobLogResult, safeJobDiagnostic, shouldIngestCompletedResult } from "./huggingface";
 
 describe("research dataset contracts", () => {
   it("creates a preview for a valid CSV dataset", () => {
@@ -45,5 +45,24 @@ describe("research dataset contracts", () => {
     expect(applicationStatus("RUNNING")).toBe("running");
     expect(applicationStatus("COMPLETED")).toBe("completed");
     expect(applicationStatus("ERROR")).toBe("failed");
+  });
+
+  it("accepts only a structured log result manifest and preserves actual track coordinates", () => {
+    const manifest = Buffer.from(JSON.stringify({ accuracy: 0.91, efficiency: 0.88, fakeRate: 0.03, trackPoints: [{ trackId: "muon-8", pointOrder: 0, x: 1, y: -2, z: 5 }] })).toString("base64");
+    expect(parseJobLogResult(`training log\nTRACKLAB_RESULT=${manifest}\n`)).toMatchObject({ accuracy: 0.91, efficiency: 0.88, fakeRate: 0.03, trackPoints: [{ trackId: "muon-8", pointOrder: 0, x: 1, y: -2, z: 5 }] });
+    expect(parseJobLogResult("no result manifest")).toBeUndefined();
+    const emptyManifest = Buffer.from("{}").toString("base64");
+    expect(parseJobLogResult(`TRACKLAB_RESULT=${emptyManifest}`)).toBeUndefined();
+  });
+
+  it("retries a completed run until a real result record exists", () => {
+    expect(shouldIngestCompletedResult("completed", false)).toBe(true);
+    expect(shouldIngestCompletedResult("completed", true)).toBe(false);
+    expect(shouldIngestCompletedResult("running", false)).toBe(false);
+  });
+
+  it("redacts Hugging Face access tokens from server diagnostic output", () => {
+    expect(safeJobDiagnostic(new Error("Authorization: Bearer hf_secretToken_123 failed"))).toContain("[redacted]");
+    expect(safeJobDiagnostic(new Error("Authorization: Bearer hf_secretToken_123 failed"))).not.toContain("hf_secretToken_123");
   });
 });

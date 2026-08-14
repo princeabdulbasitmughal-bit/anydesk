@@ -15,7 +15,7 @@ import {
 } from "./contracts";
 import * as db from "./db";
 import { makeResearchMarkdown, makeResearchPdf } from "./reports";
-import { applicationStatus, hostedJobFromHyperparameters, inspectHostedJob, namespaceFor, submitHostedJob } from "./huggingface";
+import { applicationStatus, fetchJobLogResult, hostedJobFromHyperparameters, inspectHostedJob, namespaceFor, safeJobDiagnostic, shouldIngestCompletedResult, submitHostedJob } from "./huggingface";
 
 const researcherProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "researcher" && ctx.user.role !== "admin") {
@@ -39,16 +39,26 @@ async function refreshHostedRun(ownerId: number, run: Awaited<ReturnType<typeof 
   const spec = hostedJobFromHyperparameters(configuration.hyperparameters);
   if (!spec) return run;
   try {
-    const remote = await inspectHostedJob(run.huggingFaceJobId, await namespaceFor(spec, token), token);
+    const namespace = await namespaceFor(spec, token);
+    const remote = await inspectHostedJob(run.huggingFaceJobId, namespace, token);
     const status = applicationStatus(remote.status?.stage);
-    if (status !== run.status) {
-      await db.setRunStatus(ownerId, run.id, status, status === "failed" ? remote.status?.message : undefined);
+    const existingMetrics = status === "completed" ? await db.listMetrics(ownerId, run.id) : undefined;
+    const shouldIngest = shouldIngestCompletedResult(status, Boolean(existingMetrics));
+    if (status !== run.status || shouldIngest) {
+      const result = shouldIngest ? await fetchJobLogResult(run.huggingFaceJobId, namespace, token) : undefined;
+      if (status === "completed" && result) {
+        await db.recordRunOutcome({ ownerId, runId: run.id, status, accuracy: result.accuracy, efficiency: result.efficiency, fakeRate: result.fakeRate, metricPayload: result.metricPayload, trackPoints: result.trackPoints?.map(point => ({ ...point, x: String(point.x), y: String(point.y), z: String(point.z) })) });
+      } else if (status !== run.status) {
+        await db.setRunStatus(ownerId, run.id, status, status === "failed" ? remote.status?.message : undefined);
+      }
       if ((status === "completed" || status === "failed") && run.status !== "completed" && run.status !== "failed") {
-        await notifyOwner({ title: `Experiment run ${status}`, content: `Run ${run.id} is ${status}. Key metrics: no key metrics returned.` });
+        const summary = result ? [result.accuracy !== undefined ? `accuracy ${result.accuracy}` : null, result.efficiency !== undefined ? `efficiency ${result.efficiency}` : null, result.fakeRate !== undefined ? `fake rate ${result.fakeRate}` : null].filter(Boolean).join(", ") || "no key metrics returned" : "no key metrics returned";
+        await notifyOwner({ title: `Experiment run ${status}`, content: `Run ${run.id} is ${status}. Key metrics: ${summary}.` });
       }
       return db.getRun(ownerId, run.id);
     }
-  } catch {
+  } catch (error) {
+    console.warn("[HuggingFace] Run status synchronization failed", { runId: run.id, message: safeJobDiagnostic(error) });
     return run;
   }
   return run;

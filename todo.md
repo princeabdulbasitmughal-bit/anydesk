@@ -23,3 +23,11 @@
 - [ ] Configure the single user-provided Hugging Face access token through secure project settings.
 - [ ] Connect the token to real hosted Hugging Face execution and verify non-fabricated run status, metric, track-point, and artifact handoff.
 - [x] Build a credential-ready Hugging Face Jobs submission and status-sync connector, with execution only enabled after the single token is securely configured.
+- [x] Document the Hugging Face job-configuration contract, expected inference-output handoff, and the one-token activation procedure inside the project.
+- [x] Add secure `TRACKLAB_RESULT` job-log ingestion for actual metrics and reconstructed track points using only the Hugging Face token.
+- [x] Retry delayed `TRACKLAB_RESULT` ingestion for completed runs until actual metrics or reconstructed track points are persisted.
+- [x] Complete final credential-independent resilience review for remote-run status synchronization and result ingestion.
+- [x] Reject empty remote result manifests so completed runs continue retrying until an actual metric or reconstructed track payload is available.
+- [x] Surface Hugging Face status-sync and result-ingestion failures through explicit server diagnostics instead of silently swallowing them.
+- [x] Document the final credential-independent resilience review scope, verified edge cases, and remaining token-dependent assumptions.
+- [x] Validate that Hugging Face diagnostic output never exposes the private access token or raw authorization headers.
