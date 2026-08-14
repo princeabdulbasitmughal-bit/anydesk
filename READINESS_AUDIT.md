@@ -13,7 +13,7 @@ This review covers persisted research records, UI states, result ingestion, owne
 | Results and track views | The UI reads only run metrics and track points persisted through the result-ingestion path. Empty states are shown when no real payload is available. | No fabricated accuracy, efficiency, fake rate, or reconstructed trajectory is displayed. |
 | Hugging Face results | A completed remote job is ingested only from a valid `TRACKLAB_RESULT` manifest in Hugging Face Job logs. Empty manifests are rejected and later refreshes retry while there is no stored result. | No remote output is invented; a valid actual output is required. |
 | Model guidance | `jpata/particleflow` is displayed as a linked public HEP reconstruction reference only. It is neither preselected nor executed automatically. | No unsupported model execution configuration is assumed. |
-| Owner notifications | Terminal run paths invoke the platform's built-in owner alert helper with a metrics summary when available. | Operational owner alert hook is present; dedicated external email delivery remains unconfigured. |
+| Owner notifications | Terminal run paths invoke the built-in owner alert helper and a Resend-compatible server-side email adapter with a metrics summary when available. | Built-in alert fallback and credential-ready external-email code are verified; a real provider delivery still requires owner-authorized sender settings. |
 
 ## Remaining private dependencies
 
@@ -21,7 +21,7 @@ This review covers persisted research records, UI states, result ingestion, owne
 | --- | --- | --- |
 | `HF_TOKEN` | Resolves the Hugging Face namespace, submits Jobs, inspects status, and reads Job logs. | Must be supplied by the account owner; it is never exposed to the browser or server diagnostics. |
 | Runnable model image and command | Particle tracking requires detector- and model-specific execution code. | Must be supplied in `_huggingFaceJob`; the platform does not invent a container or training command. |
-| Verified email sender | A dedicated transactional email provider requires account-owned sender authorization. | Not configured; built-in owner alerts are the available operational channel. |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `TRACKLAB_OWNER_EMAIL` | Dedicated transactional delivery requires an account-owned API key, a provider-verified sender, and an authorized recipient. | Not configured; the adapter safely skips delivery and built-in owner alerts remain the operational channel. |
 
 ## Completion boundary
 

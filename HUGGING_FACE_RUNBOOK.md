@@ -76,7 +76,9 @@ The decoded JSON can contain `accuracy`, `efficiency`, `fakeRate`, optional `met
 
 ## Owner alerts
 
-The backend is wired to send the platform owner an operational alert when a run reaches `completed` or `failed`, including any returned key-metric summary. The app's built-in owner notification channel is used until a dedicated verified email sender is explicitly configured.
+The backend sends the platform owner an operational alert when a run reaches `completed` or `failed`, including any returned key-metric summary. The built-in owner notification channel is always retained as the operational fallback.
+
+For dedicated transactional email, TrackLab additionally has a server-side Resend-compatible adapter. It activates only when all three private project settings are present: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (a provider-verified sender such as `TrackLab <alerts@research.example>`), and `TRACKLAB_OWNER_EMAIL` (the delivery recipient). These settings are never sent to the browser or included in diagnostics. When they are absent, the adapter safely skips the external request and the built-in owner alert remains active. A real `completed` and `failed` delivery must be verified only after the account owner supplies an authorized API key and verified sender.
 
 ## Credential-independent resilience review
 
@@ -87,3 +89,5 @@ The credential-independent review verifies all dataset format gates, researcher 
 [1] [Hugging Face Jobs guide](https://huggingface.co/docs/huggingface_hub/en/guides/jobs)
 
 [2] [Hugging Face Jobs API reference](https://huggingface.co/docs/hub/en/jobs-reference)
+
+[3] [Resend Send Email API reference](https://resend.com/docs/api-reference/emails/send-email)
