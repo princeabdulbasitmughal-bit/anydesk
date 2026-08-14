@@ -37,3 +37,7 @@
 - [x] Run a final credential-independent regression check after the latest UI guidance and audit updates.
 - [x] Verify that the platform preview remains healthy after autonomous maintenance and external-reference updates.
 - [x] Write a source-backed model-selection research note covering validated high-energy particle reconstruction references and platform implications.
+- [x] Add a server-side dataset upload size limit to protect the managed runtime from oversized base64 payloads.
+- [x] Validate that oversized base64 dataset payloads are rejected before binary decoding.
+- [x] Add an authenticated router test proving an oversized dataset payload is rejected before storage or binary decoding is reached.
+- [x] Verify runtime input-boundary safeguards after autonomous upload-hardening changes.

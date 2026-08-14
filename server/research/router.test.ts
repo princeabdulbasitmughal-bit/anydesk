@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TrpcContext } from "../_core/context";
+import { MAX_DATASET_BASE64_CHARS } from "./contracts";
 
 const mocks = vi.hoisted(() => ({
   createDataset: vi.fn(),
@@ -68,6 +69,14 @@ describe("authenticated research workflows", () => {
     expect(mocks.createModelConfiguration).toHaveBeenCalledOnce();
     expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "training" }));
     expect(run).toEqual({ success: true, status: "queued" });
+  });
+
+  it("rejects an oversized dataset payload before binary decoding or storage", async () => {
+    const caller = researchRouter.createCaller(context());
+    const oversizedPayload = "A".repeat(MAX_DATASET_BASE64_CHARS + 1);
+    await expect(caller.datasets.upload({ experimentId: 4, fileName: "oversized.csv", format: "csv", base64: oversizedPayload })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mocks.storagePut).not.toHaveBeenCalled();
+    expect(mocks.createDataset).not.toHaveBeenCalled();
   });
 
   it("saves findings, exports Markdown, and grounds the assistant answer in stored context", async () => {

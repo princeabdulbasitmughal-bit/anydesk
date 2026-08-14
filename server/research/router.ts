@@ -6,6 +6,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { storagePut } from "../storage";
 import {
   DATASET_FORMATS,
+  MAX_DATASET_BASE64_CHARS,
   REPORT_FORMATS,
   createDatasetPreview,
   normalizeTrackPoints,
@@ -91,7 +92,7 @@ export const researchRouter = router({
       experimentId: z.number().int().positive(),
       fileName: z.string().min(1).max(255),
       format: z.enum(DATASET_FORMATS),
-      base64: z.string().min(1),
+      base64: z.string().min(1).max(MAX_DATASET_BASE64_CHARS),
     })).mutation(async ({ ctx, input }) => {
       if (!(await db.getExperiment(ctx.user.id, input.experimentId))) throw new TRPCError({ code: "NOT_FOUND" });
       const bytes = Buffer.from(input.base64.replace(/^data:[^,]+,/, ""), "base64");

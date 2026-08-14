@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDatasetPreview, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
+import { createDatasetPreview, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
 import { makeResearchMarkdown } from "./reports";
 import { applicationStatus, hostedJobFromHyperparameters, jobPayload, parseJobLogResult, safeJobDiagnostic, shouldIngestCompletedResult } from "./huggingface";
 
@@ -8,6 +8,10 @@ describe("research dataset contracts", () => {
     const result = createDatasetPreview("csv", Buffer.from("x,y,z\n1,2,3\n"));
     expect(result.summary).toContain("3 columns");
     expect(result.preview).toContain("1,2,3");
+  });
+
+  it("sets a base64 transport cap consistent with the dataset byte limit", () => {
+    expect(MAX_DATASET_BASE64_CHARS).toBeGreaterThan(MAX_DATASET_BYTES);
   });
 
   it("rejects HDF5 content without the required file signature", () => {

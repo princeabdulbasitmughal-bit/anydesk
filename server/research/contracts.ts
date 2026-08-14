@@ -4,6 +4,7 @@ export const DATASET_FORMATS = ["csv", "json", "hdf5"] as const;
 export const RUN_STATUSES = ["queued", "running", "completed", "failed"] as const;
 export const REPORT_FORMATS = ["markdown", "pdf"] as const;
 export const MAX_DATASET_BYTES = 25 * 1024 * 1024;
+export const MAX_DATASET_BASE64_CHARS = Math.ceil(MAX_DATASET_BYTES / 3) * 4 + 512;
 
 export type DatasetFormat = (typeof DATASET_FORMATS)[number];
 export type RunStatus = (typeof RUN_STATUSES)[number];
