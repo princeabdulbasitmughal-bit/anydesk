@@ -31,3 +31,6 @@
 - [x] Surface Hugging Face status-sync and result-ingestion failures through explicit server diagnostics instead of silently swallowing them.
 - [x] Document the final credential-independent resilience review scope, verified edge cases, and remaining token-dependent assumptions.
 - [x] Validate that Hugging Face diagnostic output never exposes the private access token or raw authorization headers.
+- [x] Surface a verified Hugging Face HEP reconstruction-model reference in the model configuration workflow without auto-selecting or fabricating an execution setup.
+- [x] Complete a final no-fabrication and external-dependency boundary audit for datasets, model results, and owner alerts.
+- [x] Write and verify a project audit record covering empty research data, UI/result-ingestion safeguards, and remaining Hugging Face/email dependencies.
