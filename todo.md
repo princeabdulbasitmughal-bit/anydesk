@@ -51,3 +51,4 @@
 - [x] Verify post-checkpoint platform availability without introducing synthetic research records.
 - [x] Re-check research records after post-checkpoint availability verification to confirm no synthetic datasets, runs, metrics, findings, or reports were introduced.
 - [x] Verify post-audit code freshness and runtime response without adding research data; confirmed all research tables remain at zero records afterward.
+- [x] Perform a final lightweight service-health probe without mutating research data.
