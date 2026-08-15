@@ -65,3 +65,4 @@
 - [x] Add regression coverage for the dashboard accessibility contract and validate the focused workflow at desktop and mobile sizes. Verified 26 passing tests, TypeScript, production build, and responsive visual review.
 - [x] Run and document a post-accessibility desktop visual review of the updated dashboard shell, including active-route, sidebar, and experiment-entry controls. Verified overview, datasets, runs, and assistant routes at desktop size.
 - [x] Refine the New experiment entry flow with predictable focus placement, Escape-to-dismiss behavior, and focus return for keyboard and mobile researchers.
+- [x] Reduce initial dashboard payload by lazily loading the research-assistant route and its heavy markdown-rendering dependency, while preserving the existing assistant workflow. Verified initial production entry payload reduction from 2,190,295 bytes to 1,263,188 bytes (42.32%), with the assistant renderer moved into a route-specific chunk.
