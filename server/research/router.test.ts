@@ -104,6 +104,30 @@ describe("authenticated research workflows", () => {
     }
   });
 
+  it("reports only secret-free operational readiness states to an authorized researcher", async () => {
+    const originalToken = process.env.HF_TOKEN;
+    const originalEmailKey = process.env.RESEND_API_KEY;
+    const originalSender = process.env.RESEND_FROM_EMAIL;
+    const originalOwner = process.env.TRACKLAB_OWNER_EMAIL;
+    delete process.env.HF_TOKEN;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM_EMAIL;
+    delete process.env.TRACKLAB_OWNER_EMAIL;
+
+    try {
+      const caller = researchRouter.createCaller(context());
+      await expect(caller.operational.readiness()).resolves.toMatchObject({
+        hostedExecution: { state: "not_configured" },
+        terminalEmail: { state: "fallback_only" },
+      });
+    } finally {
+      if (originalToken === undefined) delete process.env.HF_TOKEN; else process.env.HF_TOKEN = originalToken;
+      if (originalEmailKey === undefined) delete process.env.RESEND_API_KEY; else process.env.RESEND_API_KEY = originalEmailKey;
+      if (originalSender === undefined) delete process.env.RESEND_FROM_EMAIL; else process.env.RESEND_FROM_EMAIL = originalSender;
+      if (originalOwner === undefined) delete process.env.TRACKLAB_OWNER_EMAIL; else process.env.TRACKLAB_OWNER_EMAIL = originalOwner;
+    }
+  });
+
   it("rejects an oversized dataset payload before binary decoding or storage", async () => {
     const caller = researchRouter.createCaller(context());
     const oversizedPayload = "A".repeat(MAX_DATASET_BASE64_CHARS + 1);

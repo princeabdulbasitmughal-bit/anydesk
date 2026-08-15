@@ -70,3 +70,7 @@
 - [x] Add client-side dataset preflight feedback for the accepted formats and 25 MiB maximum before binary encoding begins.
 - [x] Add explicit run prerequisite indicators that distinguish an unavailable dataset from an unavailable versioned configuration.
 - [x] Add a client-side JSON syntax preflight for model metadata so malformed configuration text is not submitted.
+- [x] Improve operational-trust communication by making the platform's safe credential-unconfigured state and genuine-execution boundary immediately clear to researchers.
+- [x] Add a protected, secret-free operational-readiness summary for hosted execution and terminal email delivery, then present it on the command center.
+- [x] Improve researcher-facing resilience with clear, user-safe error recovery and loading behavior that preserves the existing authorization and scientific-data boundaries.
+- [x] Replace exposed client error stacks with a user-safe recovery state that supports retry first and full reload as a fallback.

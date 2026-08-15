@@ -18,6 +18,7 @@ import * as db from "./db";
 import { makeResearchMarkdown, makeResearchPdf } from "./reports";
 import { applicationStatus, fetchJobLogResult, hostedJobFromHyperparameters, inspectHostedJob, namespaceFor, safeJobDiagnostic, shouldIngestCompletedResult, submitHostedJob } from "./huggingface";
 import { sendTerminalRunEmail } from "./email";
+import { getOperationalReadiness } from "./runtimeReadiness";
 
 const researcherProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "researcher" && ctx.user.role !== "admin") {
@@ -82,6 +83,9 @@ function readableContent(value: unknown) {
 }
 
 export const researchRouter = router({
+  operational: router({
+    readiness: researcherProcedure.query(() => getOperationalReadiness()),
+  }),
   experiments: router({
     list: researcherProcedure.query(({ ctx }) => db.listExperiments(ctx.user.id)),
     create: researcherProcedure.input(z.object({ title: z.string().trim().min(3).max(180), description: z.string().trim().max(4000) })).mutation(async ({ ctx, input }) => {
