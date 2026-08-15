@@ -6,7 +6,7 @@ import { useResearch } from "@/contexts/ResearchContext";
 import { trpc } from "@/lib/trpc";
 import { getExperimentGateContent } from "@shared/experimentGateContent";
 import { Plus, Search, Sparkles } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -56,19 +56,40 @@ export function ExperimentGate({ children }: { children: React.ReactNode }) {
 
 export function ExperimentSelector() {
   const { experiments, selectedExperimentId, setSelectedExperimentId, refreshExperiments } = useResearch();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const closeForm = () => {
+    setOpen(false);
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  };
   const createExperiment = trpc.research.experiments.create.useMutation({
     onSuccess: async () => {
       await refreshExperiments();
-      setOpen(false);
+      closeForm();
       setTitle("");
       setDescription("");
       toast.success("Experiment created");
     },
     onError: error => toast.error(error.message),
   });
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => titleInputRef.current?.focus());
+    const dismissOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeForm();
+    };
+    window.addEventListener("keydown", dismissOnEscape);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", dismissOnEscape);
+    };
+  }, [open]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -80,12 +101,12 @@ export function ExperimentSelector() {
       <select aria-label="Current experiment" value={selectedExperimentId ?? "none"} onChange={event => setSelectedExperimentId(Number(event.target.value))} className="h-9 max-w-56 rounded-lg border border-white/10 bg-slate-900 px-3 text-xs font-medium text-slate-200 outline-none transition focus:border-cyan-400/70">
         {experiments.length ? experiments.map(experiment => <option className="bg-slate-900" key={experiment.id} value={experiment.id}>{experiment.title}</option>) : <option className="bg-slate-900" value="none">No experiment</option>}
       </select>
-      <Button type="button" size="sm" aria-label="Create a new experiment" aria-expanded={open} aria-controls="new-experiment-form" onClick={() => setOpen(value => !value)} className="h-9 bg-cyan-300 px-3 text-slate-950 hover:bg-cyan-200"><Plus className="mr-1.5 h-3.5 w-3.5" />New experiment</Button>
+      <Button ref={triggerRef} type="button" size="sm" aria-label="Create a new experiment" aria-expanded={open} aria-controls="new-experiment-form" onClick={() => open ? closeForm() : setOpen(true)} className="h-9 bg-cyan-300 text-slate-950 hover:bg-cyan-200"><Plus className="mr-1.5 h-3.5 w-3.5" />New experiment</Button>
       {open ? (
         <form id="new-experiment-form" aria-label="Create a new research experiment" onSubmit={submit} className="absolute right-5 top-16 z-50 w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#111a28] p-5 shadow-2xl shadow-black/40">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-white"><Sparkles className="h-4 w-4 text-cyan-300" />New research experiment</div>
-          <div className="space-y-3"><div><Label htmlFor="experiment-title">Title</Label><Input id="experiment-title" value={title} onChange={event => setTitle(event.target.value)} placeholder="e.g. Silicon detector reconstruction" required className="mt-1.5 border-white/10 bg-slate-950/70 text-white" /></div><div><Label htmlFor="experiment-description">Description</Label><Textarea id="experiment-description" value={description} onChange={event => setDescription(event.target.value)} placeholder="Scope, detector conditions, or analysis target" className="mt-1.5 min-h-24 border-white/10 bg-slate-950/70 text-white" /></div></div>
-          <div className="mt-5 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setOpen(false)} className="text-slate-300 hover:bg-white/5 hover:text-white">Cancel</Button><Button disabled={createExperiment.isPending} className="bg-cyan-300 text-slate-950 hover:bg-cyan-200">Create experiment</Button></div>
+          <div className="space-y-3"><div><Label htmlFor="experiment-title">Title</Label><Input ref={titleInputRef} id="experiment-title" value={title} onChange={event => setTitle(event.target.value)} placeholder="e.g. Silicon detector reconstruction" required className="mt-1.5 border-white/10 bg-slate-950/70 text-white" /></div><div><Label htmlFor="experiment-description">Description</Label><Textarea id="experiment-description" value={description} onChange={event => setDescription(event.target.value)} placeholder="Scope, detector conditions, or analysis target" className="mt-1.5 min-h-24 border-white/10 bg-slate-950/70 text-white" /></div></div>
+          <div className="mt-5 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={closeForm} className="text-slate-300 hover:bg-white/5 hover:text-white">Cancel</Button><Button disabled={createExperiment.isPending} className="bg-cyan-300 text-slate-950 hover:bg-cyan-200">Create experiment</Button></div>
         </form>
       ) : null}
     </div>

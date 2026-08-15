@@ -64,3 +64,4 @@
 - [x] Add a keyboard-visible skip link, semantic navigation landmark, current-page announcement, and focus-safe mobile navigation labels to the existing dashboard shell.
 - [x] Add regression coverage for the dashboard accessibility contract and validate the focused workflow at desktop and mobile sizes. Verified 26 passing tests, TypeScript, production build, and responsive visual review.
 - [x] Run and document a post-accessibility desktop visual review of the updated dashboard shell, including active-route, sidebar, and experiment-entry controls. Verified overview, datasets, runs, and assistant routes at desktop size.
+- [x] Refine the New experiment entry flow with predictable focus placement, Escape-to-dismiss behavior, and focus return for keyboard and mobile researchers.

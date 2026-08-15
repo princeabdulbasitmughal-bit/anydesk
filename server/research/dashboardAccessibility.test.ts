@@ -23,4 +23,11 @@ describe("dashboard accessibility contract", () => {
     expect(researchShellSource).toContain('aria-label="Create a new experiment"');
     expect(researchShellSource).toContain('aria-expanded={open}');
   });
+
+  it("moves focus into the experiment form and returns it after Escape or cancellation", () => {
+    expect(researchShellSource).toContain('titleInputRef.current?.focus()');
+    expect(researchShellSource).toContain('event.key !== "Escape"');
+    expect(researchShellSource).toContain('triggerRef.current?.focus()');
+    expect(researchShellSource).toContain('onClick={closeForm}');
+  });
 });
