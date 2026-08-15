@@ -1,9 +1,9 @@
 import sanitizeHtml from "sanitize-html";
+import { DATASET_FORMATS, MAX_DATASET_BYTES, parseHyperparameters } from "../../shared/researchInputRules";
 
-export const DATASET_FORMATS = ["csv", "json", "hdf5"] as const;
+export { DATASET_FORMATS, MAX_DATASET_BYTES, parseHyperparameters };
 export const RUN_STATUSES = ["queued", "running", "completed", "failed"] as const;
 export const REPORT_FORMATS = ["markdown", "pdf"] as const;
-export const MAX_DATASET_BYTES = 25 * 1024 * 1024;
 export const MAX_DATASET_BASE64_CHARS = Math.ceil(MAX_DATASET_BYTES / 3) * 4 + 512;
 
 export type DatasetFormat = (typeof DATASET_FORMATS)[number];
@@ -15,14 +15,6 @@ export function isDatasetFormat(value: string): value is DatasetFormat {
 
 export function isRunStatus(value: string): value is RunStatus {
   return RUN_STATUSES.includes(value as RunStatus);
-}
-
-export function parseHyperparameters(value: string) {
-  const parsed = JSON.parse(value || "{}");
-  if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
-    throw new Error("Hyperparameters must be a JSON object.");
-  }
-  return parsed as Record<string, unknown>;
 }
 
 export function createDatasetPreview(format: DatasetFormat, bytes: Buffer) {

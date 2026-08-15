@@ -66,3 +66,7 @@
 - [x] Run and document a post-accessibility desktop visual review of the updated dashboard shell, including active-route, sidebar, and experiment-entry controls. Verified overview, datasets, runs, and assistant routes at desktop size.
 - [x] Refine the New experiment entry flow with predictable focus placement, Escape-to-dismiss behavior, and focus return for keyboard and mobile researchers.
 - [x] Reduce initial dashboard payload by lazily loading the research-assistant route and its heavy markdown-rendering dependency, while preserving the existing assistant workflow. Verified initial production entry payload reduction from 2,190,295 bytes to 1,263,188 bytes (42.32%), with the assistant renderer moved into a route-specific chunk.
+- [x] Improve data-integrity clarity at research entry points by making accepted dataset limits, reproducibility expectations, and run prerequisites immediately visible without altering validation contracts.
+- [x] Add client-side dataset preflight feedback for the accepted formats and 25 MiB maximum before binary encoding begins.
+- [x] Add explicit run prerequisite indicators that distinguish an unavailable dataset from an unavailable versioned configuration.
+- [x] Add a client-side JSON syntax preflight for model metadata so malformed configuration text is not submitted.
