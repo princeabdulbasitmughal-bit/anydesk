@@ -74,3 +74,5 @@
 - [x] Add a protected, secret-free operational-readiness summary for hosted execution and terminal email delivery, then present it on the command center.
 - [x] Improve researcher-facing resilience with clear, user-safe error recovery and loading behavior that preserves the existing authorization and scientific-data boundaries.
 - [x] Replace exposed client error stacks with a user-safe recovery state that supports retry first and full reload as a fallback.
+- [x] Reduce the remaining initial dashboard payload by lazy-loading secondary research routes behind the existing authenticated dashboard shell. Verified initial production entry payload reduction from 1,278,182 bytes to 786,406 bytes (38.47%).
+- [x] Move datasets, models, runs, results, tracks, and findings behind a shared accessible secondary-route loading boundary while keeping the command center eager.
