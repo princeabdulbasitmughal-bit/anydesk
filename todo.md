@@ -57,3 +57,6 @@
 - [x] Add automated coverage for completed and failed external-email delivery paths, including safe unconfigured-provider and rejected-provider fallbacks.
 - [x] Build a server-side credential-ready transactional-email adapter that preserves built-in owner alerts as a fallback.
 - [x] Add regression coverage proving that unconfigured external credentials cannot fabricate a hosted job submission or outbound email delivery. The hosted run stays queued without `HF_TOKEN`; the email adapter skips delivery without verified settings.
+- [x] Conduct an autonomous final quality-improvement cycle focused on high-value scientific usability, clarity, and reliability refinements without adding fabricated data or unrequested product scope. Replaced the repeated generic experiment gate with route-aware, detector-inspired scientific guidance and regression coverage that protects the no-fabrication boundary.
+- [x] Verify that the route-aware experiment-gate content replaces the generic pre-experiment message across every protected research route.
+- [x] Run the regression suite and visual review for the route-aware experiment-gate refinement before the final checkpoint. Verified 23 passing automated tests, TypeScript, production build, all eight desktop routes, and representative mobile routes.

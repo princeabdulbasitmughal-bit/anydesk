@@ -4,9 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useResearch } from "@/contexts/ResearchContext";
 import { trpc } from "@/lib/trpc";
+import { getExperimentGateContent } from "@shared/experimentGateContent";
 import { Plus, Search, Sparkles } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 export function PageHeading({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: React.ReactNode }) {
   return (
@@ -21,20 +23,34 @@ export function PageHeading({ eyebrow, title, description, children }: { eyebrow
   );
 }
 
-export function EmptyResearchState({ title, description }: { title: string; description: string }) {
+export function EmptyResearchState({ title, description, eyebrow, artifactLabel, artifactTitle, artifactDescription, markers }: { title: string; description: string; eyebrow?: string; artifactLabel?: string; artifactTitle?: string; artifactDescription?: string; markers?: readonly string[] }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/15 bg-slate-900/35 px-7 py-12 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-200"><Search className="h-5 w-5" /></div>
-      <h2 className="mt-5 font-display text-lg font-semibold text-white">{title}</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">{description}</p>
+    <div className="relative overflow-hidden rounded-2xl border border-dashed border-cyan-200/20 bg-[radial-gradient(circle_at_82%_18%,rgba(34,211,238,0.12),transparent_24%),linear-gradient(135deg,rgba(15,23,42,0.72),rgba(8,15,27,0.9))] px-6 py-9 text-left sm:px-8 sm:py-10">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(103,232,249,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(103,232,249,0.07)_1px,transparent_1px)] [background-size:28px_28px]" />
+      <div aria-hidden="true" className="pointer-events-none absolute right-6 top-5 hidden h-40 w-52 items-center justify-center sm:flex">
+        <span className="absolute h-36 w-36 rounded-full border border-cyan-200/15" />
+        <span className="absolute h-24 w-24 rounded-full border border-cyan-200/25" />
+        <span className="absolute h-px w-48 rotate-[-23deg] bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
+        <span className="absolute left-[66%] top-[27%] h-2.5 w-2.5 rounded-full bg-cyan-200 shadow-[0_0_20px_rgba(103,232,249,0.9)]" />
+        <span className="absolute left-[41%] top-[62%] h-1.5 w-1.5 rounded-full bg-teal-200 shadow-[0_0_16px_rgba(94,234,212,0.9)]" />
+      </div>
+      <div className="relative max-w-2xl">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-200/15 bg-cyan-300/10 text-cyan-100"><Search className="h-5 w-5" /></div>
+        {eyebrow ? <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-200">{eyebrow}</p> : null}
+        <h2 className="mt-2 font-display text-xl font-semibold tracking-[-0.02em] text-white">{title}</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">{description}</p>
+        {artifactTitle && artifactDescription ? <div className="mt-6 rounded-xl border border-white/8 bg-slate-950/35 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{artifactLabel ?? "Research boundary"}</p><p className="mt-2 text-sm font-medium text-slate-100">{artifactTitle}</p><p className="mt-1 text-xs leading-5 text-slate-400">{artifactDescription}</p></div> : null}
+        {markers?.length ? <div className="mt-5 flex flex-wrap gap-2">{markers.map(marker => <span key={marker} className="rounded-full border border-cyan-200/10 bg-cyan-300/[0.055] px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] text-cyan-100">{marker}</span>)}</div> : null}
+      </div>
     </div>
   );
 }
 
 export function ExperimentGate({ children }: { children: React.ReactNode }) {
   const { selectedExperiment, isLoading } = useResearch();
+  const [location] = useLocation();
   if (isLoading) return <div className="h-52 animate-pulse rounded-2xl bg-slate-800/50" />;
-  if (!selectedExperiment) return <EmptyResearchState title="Create an experiment to begin" description="Experiments keep datasets, model configurations, runs, findings, and exported reports organized in a single research record." />;
+  if (!selectedExperiment) return <EmptyResearchState {...getExperimentGateContent(location)} />;
   return <>{children}</>;
 }
 
