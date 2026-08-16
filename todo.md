@@ -76,3 +76,6 @@
 - [x] Replace exposed client error stacks with a user-safe recovery state that supports retry first and full reload as a fallback.
 - [x] Reduce the remaining initial dashboard payload by lazy-loading secondary research routes behind the existing authenticated dashboard shell. Verified initial production entry payload reduction from 1,278,182 bytes to 786,406 bytes (38.47%).
 - [x] Move datasets, models, runs, results, tracks, and findings behind a shared accessible secondary-route loading boundary while keeping the command center eager.
+- [ ] Receive administrator-authorized secure settings for real Hugging Face execution and verified terminal-run email delivery; never substitute, infer, or fabricate provider credentials.
+- [x] Create a concise, source-of-truth README that documents TrackLab's verified capabilities, authorization model, local validation commands, deployment readiness, and credential-gated activation boundary.
+- [ ] Synchronize the validated TrackLab source and documentation to the designated `tracklab-current` GitHub branch.
