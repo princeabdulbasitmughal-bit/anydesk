@@ -20,9 +20,9 @@ This review covers persisted research records, UI states, result ingestion, owne
 
 ## Verified production dependency baseline
 
-The production dependency review upgraded the affected PostCSS, Axios, Drizzle ORM, AWS S3 client/presigner, tRPC, Streamdown/Markdown parser, and Express routing paths. The resulting lockfile resolves **PostCSS 8.5.26**, **Axios 1.18.0**, **Drizzle ORM 0.45.2**, **AWS S3 client and presigner 3.1117.0**, **tRPC 11.8.0**, **Streamdown 2.6.0**, **mdast-util-to-hast 13.2.1**, and **Express 5.2.1**. Each remediation was checked with an offline frozen-lockfile install, the automated regression suite, TypeScript, and a capped production build.
+The production dependency review upgraded the affected PostCSS, Axios, Drizzle ORM, AWS S3 client/presigner, tRPC, Streamdown/Markdown parser, Express routing, NanoID, and Recharts paths. The resulting lockfile resolves **PostCSS 8.5.26**, **Axios 1.18.0**, **Drizzle ORM 0.45.2**, **AWS S3 client and presigner 3.1117.0**, **tRPC 11.8.0**, **Streamdown 2.6.0**, **mdast-util-to-hast 13.2.1**, **Express 5.2.1**, **NanoID 5.1.16**, and **Recharts 3.10.1**. Each remediation was checked with an offline frozen-lockfile install, the automated regression suite, TypeScript, and a capped production build.
 
-The review does **not** claim that the production audit is globally empty. The remaining entries are upstream `lodash` under the deprecated Recharts 2 line and `nanoid` under the managed Vite runtime plugin. Replacing either requires a separately scoped compatibility change rather than a root-level resolution that would not affect the actual dependency path. The platform therefore retains the validated direct and semver-compatible fixes while avoiding a misleading claim of complete audit clearance.
+The final `pnpm audit --prod --json` check exits cleanly. This dependency result is intentionally separate from provider activation: it does not claim that Hugging Face execution, dedicated outbound email, or populated real-data workflow reviews have occurred. Those require the owner-authorized settings and researcher-created inputs described below.
 
 ## Remaining private dependencies
 
