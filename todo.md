@@ -96,3 +96,4 @@
 - [x] Conduct one additional targeted integrity review of remaining credential-independent research workflow code paths and implement only a verified high-value correction without creating synthetic research records. The review identified and corrected browser-side coercion risk in reconstructed-track coordinates.
 - [x] Filter invalid or absent reconstructed-track coordinates in the browser before visualization so missing values can never be coerced into synthetic origin points. The viewer now excludes non-finite coordinate records and announces the filtered count.
 - [x] Add regression coverage for reconstructed-track coordinate evidence filtering, covering missing/invalid coordinate filtering and the evidence-only empty state.
+- [ ] Synchronize the validated reconstructed-track integrity refinement to the designated `tracklab-current` GitHub branch.
