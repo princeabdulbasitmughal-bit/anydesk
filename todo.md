@@ -85,3 +85,4 @@
 - [x] Synchronize the validated run-launch safety refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `d8672c4`.
 - [x] Add unsaved-findings protection that clearly distinguishes saved and edited content, prevents accidental browser-exit loss, and retains the approved Markdown/PDF-only export scope. The editor exposes a saved/unsaved state, registers a warning only for dirty browser exits, and keeps Markdown/PDF as the only report exports.
 - [x] Add regression coverage for the findings dirty-state and accidental-exit protection contract. Verified saved/unsaved status communication, guarded `beforeunload` registration, cleanup, and snapshot-safe save reconciliation.
+- [ ] Synchronize the validated findings-protection refinement to the designated `tracklab-current` GitHub branch.
