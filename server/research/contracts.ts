@@ -5,6 +5,8 @@ export { DATASET_FORMATS, MAX_DATASET_BYTES, parseHyperparameters };
 export const RUN_STATUSES = ["queued", "running", "completed", "failed"] as const;
 export const REPORT_FORMATS = ["markdown", "pdf"] as const;
 export const MAX_DATASET_BASE64_CHARS = Math.ceil(MAX_DATASET_BYTES / 3) * 4 + 512;
+export const MAX_MODEL_ARTIFACT_BYTES = MAX_DATASET_BYTES;
+export const MAX_MODEL_ARTIFACT_BASE64_CHARS = Math.ceil(MAX_MODEL_ARTIFACT_BYTES / 3) * 4 + 512;
 
 export type DatasetFormat = (typeof DATASET_FORMATS)[number];
 export type RunStatus = (typeof RUN_STATUSES)[number];
@@ -17,7 +19,7 @@ export function isRunStatus(value: string): value is RunStatus {
   return RUN_STATUSES.includes(value as RunStatus);
 }
 
-export function decodeDatasetBase64(value: string) {
+export function decodeBase64Transport(value: string) {
   const dataUrl = value.match(/^data:[^,]*;base64,([A-Za-z0-9+/]*={0,2})$/i);
   const payload = dataUrl ? dataUrl[1] : value;
   if (!payload || payload.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
@@ -29,6 +31,8 @@ export function decodeDatasetBase64(value: string) {
   }
   return bytes;
 }
+
+export const decodeDatasetBase64 = decodeBase64Transport;
 
 export function createDatasetPreview(format: DatasetFormat, bytes: Buffer) {
   if (bytes.byteLength === 0) throw new Error("The uploaded dataset is empty.");

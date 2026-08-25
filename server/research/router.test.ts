@@ -12,9 +12,11 @@ const mocks = vi.hoisted(() => ({
   getExperiment: vi.fn(),
   getDataset: vi.fn(),
   getModelConfiguration: vi.fn(),
+  getRun: vi.fn(),
   getFinding: vi.fn(),
   listRuns: vi.fn(),
   listMetrics: vi.fn(),
+  recordRunOutcome: vi.fn(),
   storagePut: vi.fn(),
   invokeLLM: vi.fn(),
   hostedJobFromHyperparameters: vi.fn(),
@@ -33,9 +35,11 @@ vi.mock("./db", () => ({
   getExperiment: mocks.getExperiment,
   getDataset: mocks.getDataset,
   getModelConfiguration: mocks.getModelConfiguration,
+  getRun: mocks.getRun,
   getFinding: mocks.getFinding,
   listRuns: mocks.listRuns,
   listMetrics: mocks.listMetrics,
+  recordRunOutcome: mocks.recordRunOutcome,
 }));
 vi.mock("../storage", () => ({ storagePut: mocks.storagePut }));
 vi.mock("../_core/llm", () => ({ invokeLLM: mocks.invokeLLM }));
@@ -68,6 +72,7 @@ describe("authenticated research workflows", () => {
     mocks.getExperiment.mockResolvedValue({ id: 4, title: "Detector study", description: "Tracking study" });
     mocks.getDataset.mockResolvedValue({ id: 8, experimentId: 4 });
     mocks.getModelConfiguration.mockResolvedValue({ id: 9, experimentId: 4 });
+    mocks.getRun.mockResolvedValue({ id: 12, experimentId: 4 });
     mocks.getFinding.mockResolvedValue(undefined);
     mocks.listRuns.mockResolvedValue([]);
     mocks.listMetrics.mockResolvedValue(undefined);
@@ -171,6 +176,14 @@ describe("authenticated research workflows", () => {
       .rejects.toThrow("not valid base64");
     expect(mocks.storagePut).not.toHaveBeenCalled();
     expect(mocks.createDataset).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed or oversized model-artifact transport before managed storage", async () => {
+    const caller = researchRouter.createCaller(context("admin"));
+    const artifact = { fileName: "model.bin", mimeType: "application/octet-stream", base64: "not-valid-base64!" };
+    await expect(caller.runOutcome.record({ runId: 12, status: "completed", modelArtifact: artifact })).rejects.toThrow("not valid base64");
+    await expect(caller.runOutcome.record({ runId: 12, status: "completed", modelArtifact: { ...artifact, base64: "A".repeat(MAX_DATASET_BASE64_CHARS + 1) } })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mocks.storagePut).not.toHaveBeenCalled();
   });
 
   it("saves findings, exports Markdown, and grounds the assistant answer in stored context", async () => {

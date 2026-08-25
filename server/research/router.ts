@@ -7,9 +7,10 @@ import { storagePut } from "../storage";
 import {
   DATASET_FORMATS,
   MAX_DATASET_BASE64_CHARS,
+  MAX_MODEL_ARTIFACT_BASE64_CHARS,
   REPORT_FORMATS,
   createDatasetPreview,
-  decodeDatasetBase64,
+  decodeBase64Transport,
   normalizeTrackPoints,
   parseHyperparameters,
   safeStorageName,
@@ -111,7 +112,7 @@ export const researchRouter = router({
       base64: z.string().min(1).max(MAX_DATASET_BASE64_CHARS),
     })).mutation(async ({ ctx, input }) => {
       if (!(await db.getExperiment(ctx.user.id, input.experimentId))) throw new TRPCError({ code: "NOT_FOUND" });
-      const bytes = decodeDatasetBase64(input.base64);
+      const bytes = decodeBase64Transport(input.base64);
       const preview = createDatasetPreview(input.format, bytes);
       const fileKey = `research/${ctx.user.id}/datasets/${input.experimentId}/${Date.now()}-${safeStorageName(input.fileName)}`;
       const stored = await storagePut(fileKey, bytes, dataMime(input.format));
@@ -206,13 +207,13 @@ export const researchRouter = router({
     }),
   }),
   runOutcome: router({
-    record: adminProcedure.input(z.object({ runId: z.number().int().positive(), status: z.enum(["completed", "failed"]), accuracy: z.number().min(0).max(1).optional(), efficiency: z.number().min(0).max(1).optional(), fakeRate: z.number().min(0).max(1).optional(), metricPayload: z.string().max(10_000).optional(), errorMessage: z.string().max(4_000).optional(), trackPoints: z.array(z.object({ trackId: z.string().trim().min(1).max(120), pointOrder: z.number().int().min(0), x: z.number(), y: z.number(), z: z.number() })).max(200_000).optional(), modelArtifact: z.object({ fileName: z.string().min(1).max(255), mimeType: z.string().min(1).max(120), base64: z.string().min(1) }).optional() })).mutation(async ({ ctx, input }) => {
+    record: adminProcedure.input(z.object({ runId: z.number().int().positive(), status: z.enum(["completed", "failed"]), accuracy: z.number().min(0).max(1).optional(), efficiency: z.number().min(0).max(1).optional(), fakeRate: z.number().min(0).max(1).optional(), metricPayload: z.string().max(10_000).optional(), errorMessage: z.string().max(4_000).optional(), trackPoints: z.array(z.object({ trackId: z.string().trim().min(1).max(120), pointOrder: z.number().int().min(0), x: z.number(), y: z.number(), z: z.number() })).max(200_000).optional(), modelArtifact: z.object({ fileName: z.string().min(1).max(255), mimeType: z.string().min(1).max(120), base64: z.string().min(1).max(MAX_MODEL_ARTIFACT_BASE64_CHARS) }).optional() })).mutation(async ({ ctx, input }) => {
       const run = await db.getRun(ctx.user.id, input.runId);
       if (!run) throw new TRPCError({ code: "NOT_FOUND" });
       const metricSummary = [input.accuracy !== undefined ? `accuracy ${input.accuracy}` : null, input.efficiency !== undefined ? `efficiency ${input.efficiency}` : null, input.fakeRate !== undefined ? `fake rate ${input.fakeRate}` : null].filter(Boolean).join(", ") || "no key metrics returned";
       let artifact: { key: string; url: string } | undefined;
       if (input.modelArtifact) {
-        const bytes = Buffer.from(input.modelArtifact.base64.replace(/^data:[^,]+,/, ""), "base64");
+        const bytes = decodeBase64Transport(input.modelArtifact.base64);
         artifact = await storagePut(`research/${ctx.user.id}/model-artifacts/${run.id}/${Date.now()}-${safeStorageName(input.modelArtifact.fileName)}`, bytes, input.modelArtifact.mimeType);
       }
       const safeErrorMessage = input.errorMessage ? safeFailureDetail(input.errorMessage) : undefined;

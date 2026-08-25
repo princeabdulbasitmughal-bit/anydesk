@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDatasetPreview, decodeDatasetBase64, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
+import { createDatasetPreview, decodeDatasetBase64, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, MAX_MODEL_ARTIFACT_BASE64_CHARS, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
 import { makeResearchMarkdown } from "./reports";
 import { applicationStatus, hostedJobFromHyperparameters, jobPayload, parseJobLogResult, safeJobDiagnostic, shouldIngestCompletedResult } from "./huggingface";
 
@@ -12,6 +12,7 @@ describe("research dataset contracts", () => {
 
   it("sets a base64 transport cap consistent with the dataset byte limit", () => {
     expect(MAX_DATASET_BASE64_CHARS).toBeGreaterThan(MAX_DATASET_BYTES);
+    expect(MAX_MODEL_ARTIFACT_BASE64_CHARS).toBe(MAX_DATASET_BASE64_CHARS);
   });
 
   it("decodes only canonical plain or data-URL base64 dataset transport", () => {

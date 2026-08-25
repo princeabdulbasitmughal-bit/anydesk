@@ -63,7 +63,7 @@ Remote execution status alone is not scientific evidence. To populate the platfo
 | --- | --- | --- |
 | Evaluation metrics | Accuracy, efficiency, and fake rate in the inclusive range 0–1; optional serialized metric payload | Per-run evaluation record |
 | Reconstructed tracks | An ordered list of `{trackId, pointOrder, x, y, z}` with finite numeric coordinates | 2D and 3D track viewer |
-| Model artifact | Model or checkpoint bytes, a filename, and MIME type | Managed model-artifact storage |
+| Model artifact | Canonical Base64 model or checkpoint bytes, a filename, and MIME type; maximum decoded size is 25 MiB | Managed model-artifact storage |
 | Failure context | Human-readable error message | Failed run history entry and owner alert |
 
 TrackLab accepts a result manifest from the Hugging Face Job log using the sentinel `TRACKLAB_RESULT=` followed by Base64-encoded JSON. This keeps the handoff inside the same single-token Hugging Face connection. The job should print one final line such as the following after actual evaluation and reconstruction:
