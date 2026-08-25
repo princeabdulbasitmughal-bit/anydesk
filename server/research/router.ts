@@ -34,7 +34,8 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-function safeFailureDetail(value: unknown, fallback = "Hosted job execution failed.") {
+export function safeFailureDetail(value: unknown, fallback = "Hosted job execution failed.") {
+  if (value === undefined || value === null || (typeof value === "string" && !value.trim())) return fallback;
   return safeJobDiagnostic(value).trim() || fallback;
 }
 

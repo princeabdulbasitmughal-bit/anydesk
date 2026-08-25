@@ -52,7 +52,7 @@ vi.mock("./huggingface", () => ({
   submitHostedJob: mocks.submitHostedJob,
 }));
 
-import { researchRouter } from "./router";
+import { researchRouter, safeFailureDetail } from "./router";
 
 function context(role: "user" | "researcher" | "admin" = "researcher") {
   return {
@@ -126,6 +126,11 @@ describe("authenticated research workflows", () => {
       if (previousToken === undefined) delete process.env.HF_TOKEN;
       else process.env.HF_TOKEN = previousToken;
     }
+  });
+
+  it("uses the safe failure fallback when a remote terminal status has no message", () => {
+    expect(safeFailureDetail(undefined)).toBe("Hosted job execution failed.");
+    expect(safeFailureDetail("   ")).toBe("Hosted job execution failed.");
   });
 
   it("reports only secret-free operational readiness states to an authorized researcher", async () => {
