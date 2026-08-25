@@ -108,5 +108,7 @@
 - [x] Add regression coverage for experiment-context reset behavior across dataset, model, and run workflows, including stale upload prevention, draft resets, and mutation-feedback isolation.
 - [x] Cancel stale browser dataset reads on experiment changes, file replacement, and component cleanup to avoid unnecessary background processing of large files. Superseded FileReader callbacks are ignored and all terminal states clear the active reader reference.
 - [x] Add regression coverage for dataset FileReader cancellation and cleanup behavior, including experiment/file-change aborts, callback isolation, and cleanup on unmount.
+- [x] Reset the native dataset file input whenever TrackLab clears a stale selection, preserving same-file reselection after an experiment change. Context changes, validation rejection, upload completion, and stale-read cleanup now clear both React state and the browser input value.
+- [x] Add regression coverage for native file-input reset during dataset selection cleanup, confirming ref-backed input clearing and cleanup wiring.
 - [x] Synchronize the validated experiment-context isolation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `1167722`.
 - [x] Synchronize the validated dataset-read cancellation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `8799a8d`.
