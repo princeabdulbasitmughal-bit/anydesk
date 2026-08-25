@@ -112,4 +112,4 @@
 - [x] Add regression coverage for native file-input reset during dataset selection cleanup, confirming ref-backed input clearing and cleanup wiring.
 - [x] Synchronize the validated experiment-context isolation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `1167722`.
 - [x] Synchronize the validated dataset-read cancellation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `8799a8d`.
-- [ ] Synchronize the validated native dataset file-input reset refinement to the designated `tracklab-current` GitHub branch.
+- [x] Synchronize the validated native dataset file-input reset refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `92bec52`.
