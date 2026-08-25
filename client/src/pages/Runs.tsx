@@ -8,7 +8,7 @@ import { useResearch } from "@/contexts/ResearchContext";
 import { trpc } from "@/lib/trpc";
 import { getRunPrerequisites } from "@shared/researchInputRules";
 import { CheckCircle2, CircleAlert, CirclePlay, Clock3, Loader2, PackageOpen, ShieldCheck, Workflow } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const statusClass = {
@@ -28,9 +28,12 @@ export default function Runs() {
   const [runType, setRunType] = useState<"training" | "inference">("training");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
+  const selectedExperimentRef = useRef(selectedExperimentId);
+  useEffect(() => { selectedExperimentRef.current = selectedExperimentId; setDatasetId(""); setConfigurationId(""); setReviewOpen(false); setAcknowledged(false); }, [selectedExperimentId]);
 
   const trigger = trpc.research.runs.trigger.useMutation({
-    onSuccess: () => {
+    onSuccess: (_result, variables) => {
+      if (variables.experimentId !== selectedExperimentRef.current) return;
       setReviewOpen(false);
       setAcknowledged(false);
       runs.refetch();

@@ -102,3 +102,7 @@
 - [x] Add regression coverage for assistant response context isolation and whitespace-safe submission, including experiment-bound response rendering and trimmed non-empty question handling.
 - [x] Synchronize the validated assistant context-isolation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `371f9aa`.
 - [x] Synchronize the latest verified checkpoint commit to the designated `tracklab-current` GitHub branch. Verified push through commit `f9ed9fa`.
+- [x] Review dataset, model, and run screens for stale experiment-context selections and correct only verified cross-experiment attribution risks. The review identified stale pending-input attribution risks across all three workflows.
+- [x] Bind pending dataset uploads to their selected experiment and clear them safely on context changes. File reads now re-check the active experiment before mutation and stale selections are discarded.
+- [x] Clear unsaved model and run form selections when the active experiment changes, including any open run-review state. Stale mutation-success feedback is also suppressed unless the response belongs to the current experiment.
+- [x] Add regression coverage for experiment-context reset behavior across dataset, model, and run workflows, including stale upload prevention, draft resets, and mutation-feedback isolation.

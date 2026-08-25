@@ -5,7 +5,7 @@ import { useResearch } from "@/contexts/ResearchContext";
 import { trpc } from "@/lib/trpc";
 import { formatDatasetSize, getDatasetFormatFromFilename, preflightDatasetFile } from "@shared/researchInputRules";
 import { FileJson2, FileSpreadsheet, Files, HardDriveUpload, Loader2, ShieldCheck } from "lucide-react";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const formats = { csv: { icon: FileSpreadsheet, label: "CSV" }, json: { icon: FileJson2, label: "JSON" }, hdf5: { icon: Files, label: "HDF5" } };
@@ -14,20 +14,33 @@ export default function Datasets() {
   const { selectedExperimentId } = useResearch();
   const datasets = trpc.research.datasets.list.useQuery({ experimentId: selectedExperimentId ?? 1 }, { enabled: Boolean(selectedExperimentId) });
   const [file, setFile] = useState<File | null>(null);
-  const upload = trpc.research.datasets.upload.useMutation({ onSuccess: () => { datasets.refetch(); setFile(null); toast.success("Dataset stored securely"); }, onError: error => toast.error(error.message) });
+  const selectedExperimentRef = useRef(selectedExperimentId);
+  const fileExperimentId = useRef<number | null>(null);
+  useEffect(() => {
+    selectedExperimentRef.current = selectedExperimentId;
+    setFile(null);
+    fileExperimentId.current = null;
+  }, [selectedExperimentId]);
+  const upload = trpc.research.datasets.upload.useMutation({ onSuccess: (_result, variables) => { if (variables.experimentId === selectedExperimentRef.current) { datasets.refetch(); setFile(null); toast.success("Dataset stored securely"); } }, onError: error => toast.error(error.message) });
   const selectFile = (event: ChangeEvent<HTMLInputElement>) => {
     const candidate = event.target.files?.[0] ?? null;
     if (!candidate) { setFile(null); return; }
     const check = preflightDatasetFile(candidate.name, candidate.size);
     if (!check.ok) { setFile(null); event.target.value = ""; toast.error(check.error); return; }
     setFile(candidate);
+    fileExperimentId.current = selectedExperimentId;
   };
   const handleUpload = async () => {
-    if (!file || !selectedExperimentId) return;
-    const check = preflightDatasetFile(file.name, file.size);
+    if (!file || !selectedExperimentId || fileExperimentId.current !== selectedExperimentId) return;
+    const experimentId = selectedExperimentId;
+    const selectedFile = file;
+    const check = preflightDatasetFile(selectedFile.name, selectedFile.size);
     if (!check.ok) return toast.error(check.error);
     const reader = new FileReader();
-    reader.onload = () => upload.mutate({ experimentId: selectedExperimentId, fileName: file.name, format: check.format, base64: String(reader.result) });
+    reader.onload = () => {
+      if (selectedExperimentRef.current !== experimentId) { setFile(null); fileExperimentId.current = null; toast.error("Dataset selection was cleared because the active experiment changed."); return; }
+      upload.mutate({ experimentId, fileName: selectedFile.name, format: check.format, base64: String(reader.result) });
+    };
     reader.onerror = () => toast.error("Dataset could not be read.");
     reader.readAsDataURL(file);
   };

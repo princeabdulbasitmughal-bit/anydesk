@@ -7,7 +7,7 @@ import { useResearch } from "@/contexts/ResearchContext";
 import { trpc } from "@/lib/trpc";
 import { parseHyperparameters } from "@shared/researchInputRules";
 import { Braces, CircleAlert, Cpu, ExternalLink, Loader2, Save, ShieldCheck } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const VERIFIED_MODEL_REFERENCE = "jpata/particleflow";
@@ -15,10 +15,12 @@ const VERIFIED_MODEL_REFERENCE = "jpata/particleflow";
 export default function Models() {
   const { selectedExperimentId } = useResearch();
   const configs = trpc.research.modelConfigurations.list.useQuery({ experimentId: selectedExperimentId ?? 1 }, { enabled: Boolean(selectedExperimentId) });
-  const create = trpc.research.modelConfigurations.create.useMutation({ onSuccess: () => { configs.refetch(); setName(""); setModelId(""); setHyperparameters("{}"); toast.success("Model configuration saved"); }, onError: error => toast.error(error.message) });
   const [name, setName] = useState("");
   const [modelId, setModelId] = useState("");
   const [hyperparameters, setHyperparameters] = useState("{}");
+  const selectedExperimentRef = useRef(selectedExperimentId);
+  useEffect(() => { selectedExperimentRef.current = selectedExperimentId; setName(""); setModelId(""); setHyperparameters("{}"); }, [selectedExperimentId]);
+  const create = trpc.research.modelConfigurations.create.useMutation({ onSuccess: (_result, variables) => { if (variables.experimentId === selectedExperimentRef.current) { configs.refetch(); setName(""); setModelId(""); setHyperparameters("{}"); toast.success("Model configuration saved"); } }, onError: error => toast.error(error.message) });
   const hyperparameterError = useMemo(() => { try { parseHyperparameters(hyperparameters); return null; } catch (error) { return error instanceof Error ? error.message : "Hyperparameters must be valid JSON."; } }, [hyperparameters]);
   const submit = (event: FormEvent) => {
     event.preventDefault();
