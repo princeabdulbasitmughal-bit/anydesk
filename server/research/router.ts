@@ -11,6 +11,7 @@ import {
   REPORT_FORMATS,
   createDatasetPreview,
   decodeBase64Transport,
+  decodeModelArtifactBase64,
   normalizeTrackPoints,
   parseHyperparameters,
   safeStorageName,
@@ -213,7 +214,7 @@ export const researchRouter = router({
       const metricSummary = [input.accuracy !== undefined ? `accuracy ${input.accuracy}` : null, input.efficiency !== undefined ? `efficiency ${input.efficiency}` : null, input.fakeRate !== undefined ? `fake rate ${input.fakeRate}` : null].filter(Boolean).join(", ") || "no key metrics returned";
       let artifact: { key: string; url: string } | undefined;
       if (input.modelArtifact) {
-        const bytes = decodeBase64Transport(input.modelArtifact.base64);
+        const bytes = decodeModelArtifactBase64(input.modelArtifact.base64);
         artifact = await storagePut(`research/${ctx.user.id}/model-artifacts/${run.id}/${Date.now()}-${safeStorageName(input.modelArtifact.fileName)}`, bytes, input.modelArtifact.mimeType);
       }
       const safeErrorMessage = input.errorMessage ? safeFailureDetail(input.errorMessage) : undefined;

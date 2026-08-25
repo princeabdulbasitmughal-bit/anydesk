@@ -34,6 +34,14 @@ export function decodeBase64Transport(value: string) {
 
 export const decodeDatasetBase64 = decodeBase64Transport;
 
+export function decodeModelArtifactBase64(value: string) {
+  const bytes = decodeBase64Transport(value);
+  if (bytes.byteLength > MAX_MODEL_ARTIFACT_BYTES) {
+    throw new Error("The model artifact exceeds the permitted size.");
+  }
+  return bytes;
+}
+
 export function createDatasetPreview(format: DatasetFormat, bytes: Buffer) {
   if (bytes.byteLength === 0) throw new Error("The uploaded dataset is empty.");
   if (bytes.byteLength > MAX_DATASET_BYTES) {

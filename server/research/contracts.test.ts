@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDatasetPreview, decodeDatasetBase64, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, MAX_MODEL_ARTIFACT_BASE64_CHARS, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
+import { createDatasetPreview, decodeDatasetBase64, decodeModelArtifactBase64, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, MAX_MODEL_ARTIFACT_BASE64_CHARS, MAX_MODEL_ARTIFACT_BYTES, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
 import { makeResearchMarkdown } from "./reports";
 import { applicationStatus, hostedJobFromHyperparameters, jobPayload, parseJobLogResult, safeJobDiagnostic, shouldIngestCompletedResult } from "./huggingface";
 
@@ -21,6 +21,12 @@ describe("research dataset contracts", () => {
     expect(decodeDatasetBase64(`data:text/csv;base64,${payload}`).toString("utf8")).toBe("x,y,z\n1,2,3\n");
     expect(() => decodeDatasetBase64("not-valid-base64!")).toThrow("not valid base64");
     expect(() => decodeDatasetBase64("data:text/csv,not-valid-base64!")).toThrow("not valid base64");
+  });
+
+  it("enforces the model-artifact cap against decoded bytes, not only base64 transport length", () => {
+    const oversizedArtifact = Buffer.alloc(MAX_MODEL_ARTIFACT_BYTES + 1).toString("base64");
+    expect(oversizedArtifact.length).toBeLessThanOrEqual(MAX_MODEL_ARTIFACT_BASE64_CHARS);
+    expect(() => decodeModelArtifactBase64(oversizedArtifact)).toThrow("model artifact exceeds");
   });
 
   it("rejects HDF5 content without the required file signature", () => {
