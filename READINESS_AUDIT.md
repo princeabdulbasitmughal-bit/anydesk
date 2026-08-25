@@ -14,6 +14,9 @@ This review covers persisted research records, UI states, result ingestion, owne
 | Hugging Face results | A completed remote job is ingested only from a valid `TRACKLAB_RESULT` manifest in Hugging Face Job logs. Empty manifests are rejected and later refreshes retry while there is no stored result. | No remote output is invented; a valid actual output is required. |
 | Model guidance | `jpata/particleflow` is displayed as a linked public HEP reconstruction reference only. It is neither preselected nor executed automatically. | No unsupported model execution configuration is assumed. |
 | Owner notifications | Terminal run paths invoke the built-in owner alert helper and a Resend-compatible server-side email adapter with a metrics summary when available. | Built-in alert fallback and credential-ready external-email code are verified; a real provider delivery still requires owner-authorized sender settings. |
+| Run launch | The client shows a review of the selected dataset, versioned configuration, run type, initial queued state, and hosted-execution boundary. Explicit acknowledgement is required before the existing server trigger is invoked. | Researchers cannot queue a selected run by accidentally submitting the form; the approved four-status lifecycle remains unchanged. |
+| Findings and exports | The findings editor announces saved versus unsaved edits, warns only on browser exit while edits are dirty, and disables Markdown/PDF export until edits are saved. The export handler enforces the same guard. | Research reports remain traceable to the stored findings record rather than an unsaved browser draft. |
+| Partial metrics | Result charts and tables filter absent or invalid metric values instead of coercing them to `0`. A dedicated empty state explains when no numeric evidence was returned. | Missing accuracy, efficiency, or fake rate is never represented as fabricated zero-valued evidence. |
 
 ## Remaining private dependencies
 
@@ -25,4 +28,4 @@ This review covers persisted research records, UI states, result ingestion, owne
 
 ## Completion boundary
 
-The platform is ready for authenticated research data management, configuration, reporting, visual analysis, and real-result ingestion once a valid source exists. Real Hugging Face training/inference and dedicated outbound email cannot be truthfully tested until the owner authorizes those external services.
+The platform is ready for authenticated research data management, configuration, reporting, visual analysis, and real-result ingestion once a valid source exists. Real Hugging Face training/inference and dedicated outbound email cannot be truthfully tested until the owner authorizes those external services. Likewise, populated workflow visual review is intentionally deferred until a researcher creates real experiment inputs; this audit does not authorize seed data solely to fill a demonstration state.

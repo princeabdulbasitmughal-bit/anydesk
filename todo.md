@@ -90,4 +90,5 @@
 - [x] Add regression coverage for the stale-report export guard, including blocking both Markdown and PDF paths while the editor is dirty and preserving accessible save-required guidance.
 - [x] Preserve partial remote evaluation evidence in the Results viewer by never converting an absent accuracy, efficiency, or fake-rate value into a synthetic zero. The chart and table now contain only finite recorded values; an explicit empty-evidence state appears when a result record has no numeric metric values.
 - [x] Add regression coverage for partial-metric rendering and no-fabrication behavior in the Results viewer, covering absent/invalid-value filtering and the actual-evidence-only empty state.
-- [ ] Synchronize the verified Results evidence-integrity refinement to the designated `tracklab-current` GitHub branch.
+- [x] Synchronize the verified Results evidence-integrity refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `68c0826`.
+- [x] Reconcile the readiness audit with the latest run-launch, findings, export, and partial-metric no-fabrication safeguards, while keeping credential- and real-data-gated verification explicitly pending.
