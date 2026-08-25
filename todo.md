@@ -106,4 +106,6 @@
 - [x] Bind pending dataset uploads to their selected experiment and clear them safely on context changes. File reads now re-check the active experiment before mutation and stale selections are discarded.
 - [x] Clear unsaved model and run form selections when the active experiment changes, including any open run-review state. Stale mutation-success feedback is also suppressed unless the response belongs to the current experiment.
 - [x] Add regression coverage for experiment-context reset behavior across dataset, model, and run workflows, including stale upload prevention, draft resets, and mutation-feedback isolation.
+- [x] Cancel stale browser dataset reads on experiment changes, file replacement, and component cleanup to avoid unnecessary background processing of large files. Superseded FileReader callbacks are ignored and all terminal states clear the active reader reference.
+- [x] Add regression coverage for dataset FileReader cancellation and cleanup behavior, including experiment/file-change aborts, callback isolation, and cleanup on unmount.
 - [x] Synchronize the validated experiment-context isolation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `1167722`.
