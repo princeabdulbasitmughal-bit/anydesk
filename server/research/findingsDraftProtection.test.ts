@@ -24,4 +24,13 @@ describe("findings draft protection", () => {
     expect(findingsSource).toContain("onInput={refreshDirtyState}");
     expect(findingsSource).toContain("window.requestAnimationFrame(refreshDirtyState)");
   });
+
+  it("blocks stale Markdown and PDF exports while findings are unsaved", () => {
+    expect(findingsSource).toContain("const requestExport");
+    expect(findingsSource).toContain("Save findings before exporting a report");
+    expect(findingsSource).toContain("disabled={isDirty || exportReport.isPending}");
+    expect(findingsSource).toContain("Save your findings before exporting so this report matches the stored research record.");
+    expect(findingsSource).toContain('requestExport("markdown")');
+    expect(findingsSource).toContain('requestExport("pdf")');
+  });
 });
