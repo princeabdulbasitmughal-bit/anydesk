@@ -93,3 +93,6 @@
 - [x] Synchronize the verified Results evidence-integrity refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `68c0826`.
 - [x] Reconcile the readiness audit with the latest run-launch, findings, export, and partial-metric no-fabrication safeguards, while keeping credential- and real-data-gated verification explicitly pending.
 - [x] Synchronize the verified readiness-audit checkpoint to the designated `tracklab-current` GitHub branch. Verified push through commit `104f492`.
+- [x] Conduct one additional targeted integrity review of remaining credential-independent research workflow code paths and implement only a verified high-value correction without creating synthetic research records. The review identified and corrected browser-side coercion risk in reconstructed-track coordinates.
+- [x] Filter invalid or absent reconstructed-track coordinates in the browser before visualization so missing values can never be coerced into synthetic origin points. The viewer now excludes non-finite coordinate records and announces the filtered count.
+- [x] Add regression coverage for reconstructed-track coordinate evidence filtering, covering missing/invalid coordinate filtering and the evidence-only empty state.
