@@ -101,3 +101,4 @@
 - [x] Bind assistant responses to their source experiment so switching context cannot display an answer as evidence for a different experiment. Responses are now tagged with the submitted experiment identifier and hidden immediately when context changes.
 - [x] Add regression coverage for assistant response context isolation and whitespace-safe submission, including experiment-bound response rendering and trimmed non-empty question handling.
 - [x] Synchronize the validated assistant context-isolation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `371f9aa`.
+- [ ] Synchronize the latest verified checkpoint commit to the designated `tracklab-current` GitHub branch.
