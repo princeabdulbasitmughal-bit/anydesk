@@ -18,6 +18,12 @@ This review covers persisted research records, UI states, result ingestion, owne
 | Findings and exports | The findings editor announces saved versus unsaved edits, warns only on browser exit while edits are dirty, and disables Markdown/PDF export until edits are saved. The export handler enforces the same guard. | Research reports remain traceable to the stored findings record rather than an unsaved browser draft. |
 | Partial metrics | Result charts and tables filter absent or invalid metric values instead of coercing them to `0`. A dedicated empty state explains when no numeric evidence was returned. | Missing accuracy, efficiency, or fake rate is never represented as fabricated zero-valued evidence. |
 
+## Verified production dependency baseline
+
+The production dependency review upgraded the affected PostCSS, Axios, Drizzle ORM, AWS S3 client/presigner, tRPC, Streamdown/Markdown parser, and Express routing paths. The resulting lockfile resolves **PostCSS 8.5.26**, **Axios 1.18.0**, **Drizzle ORM 0.45.2**, **AWS S3 client and presigner 3.1117.0**, **tRPC 11.8.0**, **Streamdown 2.6.0**, **mdast-util-to-hast 13.2.1**, and **Express 5.2.1**. Each remediation was checked with an offline frozen-lockfile install, the automated regression suite, TypeScript, and a capped production build.
+
+The review does **not** claim that the production audit is globally empty. The remaining entries are upstream `lodash` under the deprecated Recharts 2 line and `nanoid` under the managed Vite runtime plugin. Replacing either requires a separately scoped compatibility change rather than a root-level resolution that would not affect the actual dependency path. The platform therefore retains the validated direct and semver-compatible fixes while avoiding a misleading claim of complete audit clearance.
+
 ## Remaining private dependencies
 
 | Dependency | Why it is required | Current state |
