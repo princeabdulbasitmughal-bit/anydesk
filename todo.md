@@ -115,3 +115,4 @@
 - [x] Synchronize the validated native dataset file-input reset refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `92bec52`.
 - [x] Defer the heavy assistant Markdown renderer until a real response is present, preserving response context isolation and accessible loading feedback. The assistant route now lazy-loads the renderer behind an accessible response-only fallback.
 - [x] Add regression coverage and bundle measurement for deferred assistant response rendering. The assistant route chunk reduced from approximately 920 KB to 9.6 KB; the renderer is emitted separately and loads only when a visible answer needs it.
+- [ ] Synchronize the verified deferred assistant-rendering refinement to the designated `tracklab-current` GitHub branch.
