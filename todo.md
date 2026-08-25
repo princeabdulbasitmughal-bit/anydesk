@@ -109,3 +109,4 @@
 - [x] Cancel stale browser dataset reads on experiment changes, file replacement, and component cleanup to avoid unnecessary background processing of large files. Superseded FileReader callbacks are ignored and all terminal states clear the active reader reference.
 - [x] Add regression coverage for dataset FileReader cancellation and cleanup behavior, including experiment/file-change aborts, callback isolation, and cleanup on unmount.
 - [x] Synchronize the validated experiment-context isolation refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `1167722`.
+- [ ] Synchronize the validated dataset-read cancellation refinement to the designated `tracklab-current` GitHub branch.
