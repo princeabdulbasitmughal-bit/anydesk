@@ -18,4 +18,11 @@ describe("assistant context isolation", () => {
     expect(assistantSource).toContain("No assistant response for this experiment yet");
     expect(assistantSource).toContain("Responses from another experiment are never reused here.");
   });
+
+  it("loads Markdown rendering only when a context-matched response must be displayed", () => {
+    expect(assistantSource).toContain("const DeferredStreamdown = lazy(() => import(\"streamdown\")");
+    expect(assistantSource).toContain("<Suspense fallback={<p role=\"status\"");
+    expect(assistantSource).toContain("Rendering grounded response…");
+    expect(assistantSource).toContain("<DeferredStreamdown>{visibleAnswer}</DeferredStreamdown>");
+  });
 });
