@@ -66,6 +66,15 @@ describe("research dataset contracts", () => {
     expect(applicationStatus("ERROR")).toBe("failed");
   });
 
+  it("bounds credential-ready hosted-job configuration fields before remote submission", () => {
+    const valid = { _huggingFaceJob: { image: "python:3.12", command: ["python", "train.py"], environment: { TRACKLAB_MODE: "training" }, timeout: "2h" } };
+    expect(hostedJobFromHyperparameters(JSON.stringify(valid))).toMatchObject({ image: "python:3.12", environment: { TRACKLAB_MODE: "training" }, timeout: "2h" });
+    expect(() => hostedJobFromHyperparameters(JSON.stringify({ _huggingFaceJob: { ...valid._huggingFaceJob, image: "x".repeat(256) } }))).toThrow("image");
+    expect(() => hostedJobFromHyperparameters(JSON.stringify({ _huggingFaceJob: { ...valid._huggingFaceJob, command: Array.from({ length: 65 }, () => "python") } }))).toThrow("command");
+    expect(() => hostedJobFromHyperparameters(JSON.stringify({ _huggingFaceJob: { ...valid._huggingFaceJob, environment: { "INVALID-KEY": "x" } } }))).toThrow("environment");
+    expect(() => hostedJobFromHyperparameters(JSON.stringify({ _huggingFaceJob: { ...valid._huggingFaceJob, timeout: "25h" } }))).toThrow("no more than 24 hours");
+  });
+
   it("accepts only a structured log result manifest and preserves actual track coordinates", () => {
     const manifest = Buffer.from(JSON.stringify({ accuracy: 0.91, efficiency: 0.88, fakeRate: 0.03, trackPoints: [{ trackId: "muon-8", pointOrder: 0, x: 1, y: -2, z: 5 }] })).toString("base64");
     expect(parseJobLogResult(`training log\nTRACKLAB_RESULT=${manifest}\n`)).toMatchObject({ accuracy: 0.91, efficiency: 0.88, fakeRate: 0.03, trackPoints: [{ trackId: "muon-8", pointOrder: 0, x: 1, y: -2, z: 5 }] });

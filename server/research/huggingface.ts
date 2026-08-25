@@ -1,4 +1,13 @@
 type JsonRecord = Record<string, unknown>;
+const MAX_HOSTED_JOB_IMAGE_LENGTH = 255;
+const MAX_HOSTED_JOB_COMMAND_ENTRIES = 64;
+const MAX_HOSTED_JOB_COMMAND_LENGTH = 4096;
+const MAX_HOSTED_JOB_ENVIRONMENT_ENTRIES = 64;
+const MAX_HOSTED_JOB_ENVIRONMENT_KEY_LENGTH = 128;
+const MAX_HOSTED_JOB_ENVIRONMENT_VALUE_LENGTH = 4096;
+const MAX_HOSTED_JOB_NAMESPACE_LENGTH = 120;
+const MAX_HOSTED_JOB_FLAVOR_LENGTH = 80;
+const MAX_HOSTED_JOB_TIMEOUT_SECONDS = 24 * 60 * 60;
 
 export type HostedJobConfig = {
   image: string;
@@ -22,25 +31,54 @@ function asRecord(value: unknown): JsonRecord | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as JsonRecord : null;
 }
 
+function boundedText(value: unknown, maxLength: number, label: string) {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text || text.length > maxLength) throw new Error(`${label} must be a non-empty string up to ${maxLength} characters.`);
+  return text;
+}
+
+function validatedTimeout(value: unknown) {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" && typeof value !== "number") throw new Error("_huggingFaceJob.timeout must be a duration string or number of seconds.");
+  const seconds = typeof value === "number" ? value : durationSeconds(value);
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > MAX_HOSTED_JOB_TIMEOUT_SECONDS) throw new Error("_huggingFaceJob.timeout must be positive and no more than 24 hours.");
+  return typeof value === "number" ? Math.floor(value) : value.trim();
+}
+
+function validatedEnvironment(value: unknown) {
+  if (value === undefined) return undefined;
+  const record = asRecord(value);
+  if (!record) throw new Error("_huggingFaceJob.environment must be an object of string values.");
+  const entries = Object.entries(record);
+  if (entries.length > MAX_HOSTED_JOB_ENVIRONMENT_ENTRIES) throw new Error("_huggingFaceJob.environment has too many entries.");
+  return Object.fromEntries(entries.map(([key, entryValue]) => {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key) || key.length > MAX_HOSTED_JOB_ENVIRONMENT_KEY_LENGTH || typeof entryValue !== "string" || entryValue.length > MAX_HOSTED_JOB_ENVIRONMENT_VALUE_LENGTH) {
+      throw new Error("_huggingFaceJob.environment contains an invalid key or value.");
+    }
+    return [key, entryValue];
+  }));
+}
+
 export function hostedJobFromHyperparameters(hyperparameters: string | null | undefined): HostedJobConfig | undefined {
   if (typeof hyperparameters !== "string") return undefined;
   const parsed = JSON.parse(hyperparameters) as unknown;
   const root = asRecord(parsed);
   const raw = asRecord(root?._huggingFaceJob);
   if (!raw) return undefined;
-  const image = typeof raw.image === "string" ? raw.image.trim() : "";
-  const command = Array.isArray(raw.command) && raw.command.every(item => typeof item === "string") ? raw.command.map(item => item.trim()).filter(Boolean) : [];
-  const environmentRecord = asRecord(raw.environment);
-  const environment = environmentRecord && Object.values(environmentRecord).every(value => typeof value === "string") ? Object.fromEntries(Object.entries(environmentRecord).map(([key, value]) => [key, String(value)])) : undefined;
-  if (!image || !command.length) throw new Error("_huggingFaceJob requires a Docker image and a non-empty command array.");
-  if (raw.timeout !== undefined && typeof raw.timeout !== "string" && typeof raw.timeout !== "number") throw new Error("_huggingFaceJob.timeout must be a duration string or number of seconds.");
+  const image = boundedText(raw.image, MAX_HOSTED_JOB_IMAGE_LENGTH, "_huggingFaceJob.image");
+  if (!Array.isArray(raw.command) || raw.command.length === 0 || raw.command.length > MAX_HOSTED_JOB_COMMAND_ENTRIES) throw new Error("_huggingFaceJob.command must contain between 1 and 64 arguments.");
+  const command = raw.command.map(item => boundedText(item, MAX_HOSTED_JOB_COMMAND_LENGTH, "_huggingFaceJob.command entries"));
+  const environment = validatedEnvironment(raw.environment);
+  const timeout = validatedTimeout(raw.timeout);
+  const flavor = raw.flavor === undefined ? undefined : boundedText(raw.flavor, MAX_HOSTED_JOB_FLAVOR_LENGTH, "_huggingFaceJob.flavor");
+  const namespace = raw.namespace === undefined ? undefined : boundedText(raw.namespace, MAX_HOSTED_JOB_NAMESPACE_LENGTH, "_huggingFaceJob.namespace");
   return {
     image,
     command,
-    flavor: typeof raw.flavor === "string" ? raw.flavor : undefined,
-    timeout: typeof raw.timeout === "string" || typeof raw.timeout === "number" ? raw.timeout : undefined,
+    flavor,
+    timeout,
     environment,
-    namespace: typeof raw.namespace === "string" ? raw.namespace.trim() || undefined : undefined,
+    namespace,
   };
 }
 
@@ -55,7 +93,7 @@ export function jobPayload(config: HostedJobConfig, name: string): JsonRecord {
   };
   if (config.timeout !== undefined) {
     const seconds = typeof config.timeout === "number" ? config.timeout : durationSeconds(config.timeout);
-    if (!Number.isFinite(seconds) || seconds <= 0) throw new Error("_huggingFaceJob.timeout must be positive.");
+    if (!Number.isFinite(seconds) || seconds <= 0 || seconds > MAX_HOSTED_JOB_TIMEOUT_SECONDS) throw new Error("_huggingFaceJob.timeout must be positive and no more than 24 hours.");
     payload.timeoutSeconds = Math.floor(seconds);
   }
   return payload;
