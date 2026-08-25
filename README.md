@@ -70,6 +70,7 @@ No token, provider key, authorization header, or verified sender value is commit
 | --- | --- |
 | [Hugging Face execution runbook](./HUGGING_FACE_RUNBOOK.md) | Single-token activation, job contract, status mapping, result handoff, and dedicated-email boundary. |
 | [Readiness audit](./READINESS_AUDIT.md) | No-fabrication review and external-dependency boundary. |
+| [Particleflow reference revalidation](./MODEL_REFERENCE_REVALIDATION.md) | Dated public-source validation that keeps the cited reconstruction repository as a research reference rather than an assumed execution setup. |
 | [Operational readiness audit](./OPERATIONAL_READINESS_AUDIT.md) | Secret-free researcher-facing operational-state review. |
 | [Quality refinement audit](./QUALITY_REFINEMENT_AUDIT.md) | Scientific usability, clarity, and reliability refinement record. |
 | [Accessibility refinement audit](./ACCESSIBILITY_REFINEMENT_AUDIT.md) | Keyboard navigation, focus management, and responsive-accessibility record. |
