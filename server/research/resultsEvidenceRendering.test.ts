@@ -18,4 +18,10 @@ describe("results evidence rendering", () => {
     expect(resultsSource).toContain("does not substitute missing accuracy, efficiency, or fake-rate values with zero");
     expect(resultsSource).toContain("Actual evaluation values returned for the selected run");
   });
+
+  it("keeps the chart tooltip formatter safe for Recharts 3's optional runtime values", () => {
+    expect(resultsSource).toContain('typeof value === "number" && Number.isFinite(value)');
+    expect(resultsSource).toContain(' : "Unavailable"');
+    expect(resultsSource).not.toContain("formatter={(value: number)");
+  });
 });
