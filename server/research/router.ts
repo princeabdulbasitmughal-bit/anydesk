@@ -34,9 +34,13 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+function safeFailureDetail(value: unknown, fallback = "Hosted job execution failed.") {
+  return safeJobDiagnostic(value).trim() || fallback;
+}
+
 async function notifyTerminalRunOutcome(input: { runId: number; status: "completed" | "failed"; metricSummary: string; errorMessage?: string }) {
   await notifyOwner({ title: `Experiment run ${input.status}`, content: `Run ${input.runId} is ${input.status}. Key metrics: ${input.metricSummary}.` });
-  await sendTerminalRunEmail(input);
+  await sendTerminalRunEmail({ ...input, errorMessage: input.errorMessage ? safeFailureDetail(input.errorMessage) : undefined });
 }
 
 async function refreshHostedRun(ownerId: number, run: Awaited<ReturnType<typeof db.getRun>>) {
@@ -57,11 +61,11 @@ async function refreshHostedRun(ownerId: number, run: Awaited<ReturnType<typeof 
       if (status === "completed" && result) {
         await db.recordRunOutcome({ ownerId, runId: run.id, status, accuracy: result.accuracy, efficiency: result.efficiency, fakeRate: result.fakeRate, metricPayload: result.metricPayload, trackPoints: result.trackPoints?.map(point => ({ ...point, x: String(point.x), y: String(point.y), z: String(point.z) })) });
       } else if (status !== run.status) {
-        await db.setRunStatus(ownerId, run.id, status, status === "failed" ? remote.status?.message : undefined);
+        await db.setRunStatus(ownerId, run.id, status, status === "failed" ? safeFailureDetail(remote.status?.message) : undefined);
       }
       if ((status === "completed" || status === "failed") && run.status !== "completed" && run.status !== "failed") {
         const summary = result ? [result.accuracy !== undefined ? `accuracy ${result.accuracy}` : null, result.efficiency !== undefined ? `efficiency ${result.efficiency}` : null, result.fakeRate !== undefined ? `fake rate ${result.fakeRate}` : null].filter(Boolean).join(", ") || "no key metrics returned" : "no key metrics returned";
-        await notifyTerminalRunOutcome({ runId: run.id, status, metricSummary: summary, errorMessage: status === "failed" ? remote.status?.message : undefined });
+        await notifyTerminalRunOutcome({ runId: run.id, status, metricSummary: summary, errorMessage: status === "failed" ? safeFailureDetail(remote.status?.message) : undefined });
       }
       return db.getRun(ownerId, run.id);
     }
@@ -146,7 +150,7 @@ export const researchRouter = router({
           if (!submitted.id) throw new Error("Hugging Face Jobs did not return a job identifier.");
           await db.setHostedRunSubmission(ctx.user.id, runId, submitted.id);
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Hosted job submission failed.";
+          const message = safeFailureDetail(error, "Hosted job submission failed.");
           await db.setRunStatus(ctx.user.id, runId, "failed", message);
           await notifyTerminalRunOutcome({ runId, status: "failed", metricSummary: "no key metrics returned", errorMessage: message });
           return { success: false, status: "failed" as const, message };
@@ -209,6 +213,7 @@ export const researchRouter = router({
         const bytes = Buffer.from(input.modelArtifact.base64.replace(/^data:[^,]+,/, ""), "base64");
         artifact = await storagePut(`research/${ctx.user.id}/model-artifacts/${run.id}/${Date.now()}-${safeStorageName(input.modelArtifact.fileName)}`, bytes, input.modelArtifact.mimeType);
       }
+      const safeErrorMessage = input.errorMessage ? safeFailureDetail(input.errorMessage) : undefined;
       await db.recordRunOutcome({
         ownerId: ctx.user.id,
         runId: input.runId,
@@ -217,12 +222,12 @@ export const researchRouter = router({
         efficiency: input.efficiency,
         fakeRate: input.fakeRate,
         metricPayload: input.metricPayload,
-        errorMessage: input.errorMessage,
+        errorMessage: safeErrorMessage,
         trackPoints: input.trackPoints ? normalizeTrackPoints(input.trackPoints) : undefined,
         modelArtifactKey: artifact?.key,
         modelArtifactUrl: artifact?.url,
       });
-      await notifyTerminalRunOutcome({ runId: run.id, status: input.status, metricSummary, errorMessage: input.errorMessage });
+      await notifyTerminalRunOutcome({ runId: run.id, status: input.status, metricSummary, errorMessage: safeErrorMessage });
       return { success: true };
     }),
   }),

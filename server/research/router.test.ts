@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   createDataset: vi.fn(),
   createModelConfiguration: vi.fn(),
   createRun: vi.fn(),
+  setRunStatus: vi.fn(),
   saveFinding: vi.fn(),
   createReport: vi.fn(),
   getExperiment: vi.fn(),
@@ -17,13 +18,16 @@ const mocks = vi.hoisted(() => ({
   storagePut: vi.fn(),
   invokeLLM: vi.fn(),
   hostedJobFromHyperparameters: vi.fn(),
+  safeJobDiagnostic: vi.fn(),
   submitHostedJob: vi.fn(),
+  sendTerminalRunEmail: vi.fn(),
 }));
 
 vi.mock("./db", () => ({
   createDataset: mocks.createDataset,
   createModelConfiguration: mocks.createModelConfiguration,
   createRun: mocks.createRun,
+  setRunStatus: mocks.setRunStatus,
   saveFinding: mocks.saveFinding,
   createReport: mocks.createReport,
   getExperiment: mocks.getExperiment,
@@ -36,13 +40,14 @@ vi.mock("./db", () => ({
 vi.mock("../storage", () => ({ storagePut: mocks.storagePut }));
 vi.mock("../_core/llm", () => ({ invokeLLM: mocks.invokeLLM }));
 vi.mock("../_core/notification", () => ({ notifyOwner: vi.fn() }));
+vi.mock("./email", () => ({ sendTerminalRunEmail: mocks.sendTerminalRunEmail }));
 vi.mock("./huggingface", () => ({
   applicationStatus: vi.fn(),
   fetchJobLogResult: vi.fn(),
   hostedJobFromHyperparameters: mocks.hostedJobFromHyperparameters,
   inspectHostedJob: vi.fn(),
   namespaceFor: vi.fn(),
-  safeJobDiagnostic: vi.fn(),
+  safeJobDiagnostic: mocks.safeJobDiagnostic,
   shouldIngestCompletedResult: vi.fn(),
   submitHostedJob: mocks.submitHostedJob,
 }));
@@ -70,6 +75,7 @@ describe("authenticated research workflows", () => {
     mocks.createRun.mockResolvedValue([{ insertId: 12 }]);
     mocks.invokeLLM.mockResolvedValue({ choices: [{ message: { content: "No stored run metrics are available." } }] });
     mocks.hostedJobFromHyperparameters.mockReturnValue({ image: "registry.example.org/particle-tracker:latest", command: ["python", "train.py"] });
+    mocks.safeJobDiagnostic.mockImplementation(error => String(error instanceof Error ? error.message : error).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").replace(/hf_[A-Za-z0-9_-]+/g, "hf_[redacted]"));
   });
 
   it("accepts a supported dataset, saves a model configuration, and queues a run", async () => {
@@ -98,6 +104,24 @@ describe("authenticated research workflows", () => {
       expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "inference" }));
       expect(mocks.hostedJobFromHyperparameters).toHaveBeenCalledOnce();
       expect(mocks.submitHostedJob).not.toHaveBeenCalled();
+    } finally {
+      if (previousToken === undefined) delete process.env.HF_TOKEN;
+      else process.env.HF_TOKEN = previousToken;
+    }
+  });
+
+  it("redacts hosted submission failure details before persistence, response, and terminal email", async () => {
+    const previousToken = process.env.HF_TOKEN;
+    process.env.HF_TOKEN = "hf_privateToken_123";
+    mocks.submitHostedJob.mockRejectedValue(new Error("Authorization: Bearer hf_privateToken_123 rejected"));
+    const caller = researchRouter.createCaller(context());
+
+    try {
+      await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, runType: "inference" }))
+        .resolves.toEqual({ success: false, status: "failed", message: "Authorization: Bearer [redacted] rejected" });
+      expect(mocks.setRunStatus).toHaveBeenCalledWith(7, 12, "failed", "Authorization: Bearer [redacted] rejected");
+      expect(mocks.sendTerminalRunEmail).toHaveBeenCalledWith(expect.objectContaining({ errorMessage: "Authorization: Bearer [redacted] rejected" }));
+      expect(JSON.stringify(mocks.setRunStatus.mock.calls)).not.toContain("hf_privateToken_123");
     } finally {
       if (previousToken === undefined) delete process.env.HF_TOKEN;
       else process.env.HF_TOKEN = previousToken;
