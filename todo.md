@@ -97,3 +97,6 @@
 - [x] Filter invalid or absent reconstructed-track coordinates in the browser before visualization so missing values can never be coerced into synthetic origin points. The viewer now excludes non-finite coordinate records and announces the filtered count.
 - [x] Add regression coverage for reconstructed-track coordinate evidence filtering, covering missing/invalid coordinate filtering and the evidence-only empty state.
 - [x] Synchronize the validated reconstructed-track integrity refinement to the designated `tracklab-current` GitHub branch. Verified push through commit `e0f9bda`.
+- [x] Conduct one final credential-independent defensive reliability review of a protected research workflow and implement only a concrete, regression-tested correction that preserves the no-fabrication boundary. The review identified and corrected stale assistant-response attribution after an experiment switch.
+- [x] Bind assistant responses to their source experiment so switching context cannot display an answer as evidence for a different experiment. Responses are now tagged with the submitted experiment identifier and hidden immediately when context changes.
+- [x] Add regression coverage for assistant response context isolation and whitespace-safe submission, including experiment-bound response rendering and trimmed non-empty question handling.
