@@ -17,6 +17,19 @@ export function isRunStatus(value: string): value is RunStatus {
   return RUN_STATUSES.includes(value as RunStatus);
 }
 
+export function decodeDatasetBase64(value: string) {
+  const dataUrl = value.match(/^data:[^,]*;base64,([A-Za-z0-9+/]*={0,2})$/i);
+  const payload = dataUrl ? dataUrl[1] : value;
+  if (!payload || payload.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
+    throw new Error("The dataset transport is not valid base64.");
+  }
+  const bytes = Buffer.from(payload, "base64");
+  if (bytes.byteLength === 0 || bytes.toString("base64") !== payload) {
+    throw new Error("The dataset transport is not valid base64.");
+  }
+  return bytes;
+}
+
 export function createDatasetPreview(format: DatasetFormat, bytes: Buffer) {
   if (bytes.byteLength === 0) throw new Error("The uploaded dataset is empty.");
   if (bytes.byteLength > MAX_DATASET_BYTES) {

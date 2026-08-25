@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDatasetPreview, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
+import { createDatasetPreview, decodeDatasetBase64, MAX_DATASET_BASE64_CHARS, MAX_DATASET_BYTES, normalizeTrackPoints, parseHyperparameters, sanitizeFindings } from "./contracts";
 import { makeResearchMarkdown } from "./reports";
 import { applicationStatus, hostedJobFromHyperparameters, jobPayload, parseJobLogResult, safeJobDiagnostic, shouldIngestCompletedResult } from "./huggingface";
 
@@ -12,6 +12,14 @@ describe("research dataset contracts", () => {
 
   it("sets a base64 transport cap consistent with the dataset byte limit", () => {
     expect(MAX_DATASET_BASE64_CHARS).toBeGreaterThan(MAX_DATASET_BYTES);
+  });
+
+  it("decodes only canonical plain or data-URL base64 dataset transport", () => {
+    const payload = Buffer.from("x,y,z\n1,2,3\n").toString("base64");
+    expect(decodeDatasetBase64(payload).toString("utf8")).toBe("x,y,z\n1,2,3\n");
+    expect(decodeDatasetBase64(`data:text/csv;base64,${payload}`).toString("utf8")).toBe("x,y,z\n1,2,3\n");
+    expect(() => decodeDatasetBase64("not-valid-base64!")).toThrow("not valid base64");
+    expect(() => decodeDatasetBase64("data:text/csv,not-valid-base64!")).toThrow("not valid base64");
   });
 
   it("rejects HDF5 content without the required file signature", () => {

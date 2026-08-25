@@ -165,6 +165,14 @@ describe("authenticated research workflows", () => {
     expect(mocks.createDataset).not.toHaveBeenCalled();
   });
 
+  it("rejects malformed dataset base64 before decoding or storage", async () => {
+    const caller = researchRouter.createCaller(context());
+    await expect(caller.datasets.upload({ experimentId: 4, fileName: "invalid.csv", format: "csv", base64: "not-valid-base64!" }))
+      .rejects.toThrow("not valid base64");
+    expect(mocks.storagePut).not.toHaveBeenCalled();
+    expect(mocks.createDataset).not.toHaveBeenCalled();
+  });
+
   it("saves findings, exports Markdown, and grounds the assistant answer in stored context", async () => {
     const caller = researchRouter.createCaller(context());
     await caller.findings.save({ experimentId: 4, title: "Notes", content: "<p>Detector behavior is stable.</p>" });

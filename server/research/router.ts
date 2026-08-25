@@ -9,6 +9,7 @@ import {
   MAX_DATASET_BASE64_CHARS,
   REPORT_FORMATS,
   createDatasetPreview,
+  decodeDatasetBase64,
   normalizeTrackPoints,
   parseHyperparameters,
   safeStorageName,
@@ -110,7 +111,7 @@ export const researchRouter = router({
       base64: z.string().min(1).max(MAX_DATASET_BASE64_CHARS),
     })).mutation(async ({ ctx, input }) => {
       if (!(await db.getExperiment(ctx.user.id, input.experimentId))) throw new TRPCError({ code: "NOT_FOUND" });
-      const bytes = Buffer.from(input.base64.replace(/^data:[^,]+,/, ""), "base64");
+      const bytes = decodeDatasetBase64(input.base64);
       const preview = createDatasetPreview(input.format, bytes);
       const fileKey = `research/${ctx.user.id}/datasets/${input.experimentId}/${Date.now()}-${safeStorageName(input.fileName)}`;
       const stored = await storagePut(fileKey, bytes, dataMime(input.format));
