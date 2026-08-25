@@ -82,3 +82,4 @@
 - [x] Add a concise run-launch review that makes the selected dataset, versioned configuration, execution boundary, and irreversible remote-compute implication clear immediately before submission, without changing the approved four-status lifecycle. The modal requires an explicit acknowledgement before the server trigger is invoked and preserves the existing queued/running/completed/failed lifecycle.
 - [x] Add regression coverage for the run-launch review workflow. Verified three contracts: review-gated submission, selected-input and execution-boundary clarity, and acknowledgement-gated confirmation.
 - [ ] Perform an authenticated visual review of the populated run-launch modal with a real researcher-created dataset and configuration; do not seed synthetic research records solely for UI review.
+- [ ] Synchronize the validated run-launch safety refinement to the designated `tracklab-current` GitHub branch.
