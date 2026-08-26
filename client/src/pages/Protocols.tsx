@@ -31,10 +31,10 @@ export default function Protocols() {
     setHydratedVersion(null);
   }, [selectedExperimentId]);
   useEffect(() => {
-    if (!latest.data || hydratedVersion === latest.data.version) return;
+    if (!latest.data || latest.data.experimentId !== selectedExperimentId || hydratedVersion === latest.data.version) return;
     setDraft({ objective: latest.data.objective, detectorContext: latest.data.detectorContext, evaluationPlan: latest.data.evaluationPlan, acceptanceCriteria: latest.data.acceptanceCriteria });
     setHydratedVersion(latest.data.version);
-  }, [hydratedVersion, latest.data]);
+  }, [hydratedVersion, latest.data, selectedExperimentId]);
 
   const isReady = useMemo(() => fields.every(field => draft[field.key].trim().length >= 8), [draft]);
   const save = trpc.research.protocols.saveRevision.useMutation({

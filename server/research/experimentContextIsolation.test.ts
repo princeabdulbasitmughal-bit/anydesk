@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const datasetsSource = readFileSync(resolve(process.cwd(), "client/src/pages/Datasets.tsx"), "utf8");
 const modelsSource = readFileSync(resolve(process.cwd(), "client/src/pages/Models.tsx"), "utf8");
+const protocolsSource = readFileSync(resolve(process.cwd(), "client/src/pages/Protocols.tsx"), "utf8");
 const runsSource = readFileSync(resolve(process.cwd(), "client/src/pages/Runs.tsx"), "utf8");
 
 describe("experiment context isolation", () => {
@@ -22,5 +23,10 @@ describe("experiment context isolation", () => {
     expect(modelsSource).toContain("variables.experimentId === selectedExperimentRef.current");
     expect(runsSource).toContain("variables.experimentId !== selectedExperimentRef.current");
     expect(datasetsSource).toContain("variables.experimentId === selectedExperimentRef.current");
+  });
+
+  it("resets and only hydrates a Protocol draft for its active experiment", () => {
+    expect(protocolsSource).toContain("setDraft(blankDraft);");
+    expect(protocolsSource).toContain("latest.data.experimentId !== selectedExperimentId");
   });
 });
