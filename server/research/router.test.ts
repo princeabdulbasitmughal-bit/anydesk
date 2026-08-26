@@ -14,8 +14,12 @@ const mocks = vi.hoisted(() => ({
   getModelConfiguration: vi.fn(),
   getRun: vi.fn(),
   getFinding: vi.fn(),
+  listDatasets: vi.fn(),
+  listModelConfigurations: vi.fn(),
   listRuns: vi.fn(),
   listMetrics: vi.fn(),
+  listTrackPoints: vi.fn(),
+  listReports: vi.fn(),
   recordRunOutcome: vi.fn(),
   storagePut: vi.fn(),
   invokeLLM: vi.fn(),
@@ -37,8 +41,12 @@ vi.mock("./db", () => ({
   getModelConfiguration: mocks.getModelConfiguration,
   getRun: mocks.getRun,
   getFinding: mocks.getFinding,
+  listDatasets: mocks.listDatasets,
+  listModelConfigurations: mocks.listModelConfigurations,
   listRuns: mocks.listRuns,
   listMetrics: mocks.listMetrics,
+  listTrackPoints: mocks.listTrackPoints,
+  listReports: mocks.listReports,
   recordRunOutcome: mocks.recordRunOutcome,
 }));
 vi.mock("../storage", () => ({ storagePut: mocks.storagePut }));
@@ -74,8 +82,12 @@ describe("authenticated research workflows", () => {
     mocks.getModelConfiguration.mockResolvedValue({ id: 9, experimentId: 4 });
     mocks.getRun.mockResolvedValue({ id: 12, experimentId: 4 });
     mocks.getFinding.mockResolvedValue(undefined);
+    mocks.listDatasets.mockResolvedValue([]);
+    mocks.listModelConfigurations.mockResolvedValue([]);
     mocks.listRuns.mockResolvedValue([]);
     mocks.listMetrics.mockResolvedValue(undefined);
+    mocks.listTrackPoints.mockResolvedValue([]);
+    mocks.listReports.mockResolvedValue([]);
     mocks.storagePut.mockResolvedValue({ key: "research/file", url: "/manus-storage/research/file" });
     mocks.createRun.mockResolvedValue([{ insertId: 12 }]);
     mocks.invokeLLM.mockResolvedValue({ choices: [{ message: { content: "No stored run metrics are available." } }] });
@@ -196,6 +208,17 @@ describe("authenticated research workflows", () => {
     expect(report.url).toBe("/manus-storage/research/file");
     expect(mocks.invokeLLM).toHaveBeenCalledOnce();
     expect(answer.answer).toBe("No stored run metrics are available.");
+  });
+
+  it("returns an evidence-only reproducibility ledger and blocks empty manifest exports", async () => {
+    const caller = researchRouter.createCaller(context());
+    const ledger = await caller.reproducibility.ledger({ experimentId: 4 });
+    await expect(caller.reproducibility.manifest({ experimentId: 4 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    expect(ledger.hasActualEvidence).toBe(false);
+    expect(ledger.manifest.evidence.datasets).toEqual([]);
+    expect(ledger.manifest.evidence.runs).toEqual([]);
+    expect(ledger.manifest.missingEvidence).toContain("Dataset provenance");
   });
 
   it("rejects non-researcher access", async () => {

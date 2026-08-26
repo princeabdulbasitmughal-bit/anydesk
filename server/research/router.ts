@@ -22,6 +22,7 @@ import { makeResearchMarkdown, makeResearchPdf } from "./reports";
 import { applicationStatus, fetchJobLogResult, hostedJobFromHyperparameters, inspectHostedJob, namespaceFor, safeJobDiagnostic, shouldIngestCompletedResult, submitHostedJob } from "./huggingface";
 import { sendTerminalRunEmail } from "./email";
 import { getOperationalReadiness } from "./runtimeReadiness";
+import { buildReproducibilityLedger } from "./reproducibility";
 
 const researcherProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "researcher" && ctx.user.role !== "admin") {
@@ -88,6 +89,32 @@ function readableContent(value: unknown) {
   if (typeof value === "string") return value;
   if (Array.isArray(value)) return value.map(item => ("text" in item ? String(item.text) : "")).join("");
   return "";
+}
+
+async function getReproducibilityLedger(ownerId: number, experimentId: number) {
+  const experiment = await db.getExperiment(ownerId, experimentId);
+  if (!experiment) throw new TRPCError({ code: "NOT_FOUND" });
+  const [datasets, configurations, runs, finding, reports] = await Promise.all([
+    db.listDatasets(ownerId, experimentId),
+    db.listModelConfigurations(ownerId, experimentId),
+    db.listRuns(ownerId, experimentId),
+    db.getFinding(ownerId, experimentId),
+    db.listReports(ownerId, experimentId),
+  ]);
+  const [metricEntries, trackEntries] = await Promise.all([
+    Promise.all(runs.map(async run => [run.id, await db.listMetrics(ownerId, run.id)] as const)),
+    Promise.all(runs.map(async run => [run.id, await db.listTrackPoints(ownerId, run.id)] as const)),
+  ]);
+  return buildReproducibilityLedger({
+    experiment,
+    datasets,
+    configurations,
+    runs,
+    metricsByRun: Object.fromEntries(metricEntries),
+    tracksByRun: Object.fromEntries(trackEntries),
+    finding,
+    reports,
+  });
 }
 
 export const researchRouter = router({
@@ -189,6 +216,14 @@ export const researchRouter = router({
       const stored = await storagePut(`research/${ctx.user.id}/reports/${input.experimentId}/${Date.now()}-research-report.${extension}`, storageContent, input.format === "markdown" ? "text/markdown" : "application/pdf");
       await db.createReport({ ownerId: ctx.user.id, experimentId: input.experimentId, findingId: finding?.id ?? null, format: input.format, fileKey: stored.key, fileUrl: stored.url });
       return { url: stored.url, format: input.format };
+    }),
+  }),
+  reproducibility: router({
+    ledger: researcherProcedure.input(z.object({ experimentId: z.number().int().positive() })).query(({ ctx, input }) => getReproducibilityLedger(ctx.user.id, input.experimentId)),
+    manifest: researcherProcedure.input(z.object({ experimentId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const ledger = await getReproducibilityLedger(ctx.user.id, input.experimentId);
+      if (!ledger.hasActualEvidence) throw new TRPCError({ code: "BAD_REQUEST", message: "A reproducibility manifest requires at least one real experiment record." });
+      return { fileName: `tracklab-reproducibility-${input.experimentId}.json`, content: JSON.stringify(ledger.manifest, null, 2) };
     }),
   }),
   assistant: router({

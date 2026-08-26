@@ -15,6 +15,7 @@ const Datasets = lazy(() => import("@/pages/Datasets"));
 const Findings = lazy(() => import("@/pages/Findings"));
 const Models = lazy(() => import("@/pages/Models"));
 const Results = lazy(() => import("@/pages/Results"));
+const Reproducibility = lazy(() => import("@/pages/Reproducibility"));
 const Runs = lazy(() => import("@/pages/Runs"));
 const Tracks = lazy(() => import("@/pages/Tracks"));
 
@@ -37,6 +38,7 @@ function Router() {
     <Route path="/models">{() => <ResearchPage><Suspense fallback={<SecondaryRouteFallback />}><Models /></Suspense></ResearchPage>}</Route>
     <Route path="/runs">{() => <ResearchPage><Suspense fallback={<SecondaryRouteFallback />}><Runs /></Suspense></ResearchPage>}</Route>
     <Route path="/results">{() => <ResearchPage><Suspense fallback={<SecondaryRouteFallback />}><Results /></Suspense></ResearchPage>}</Route>
+    <Route path="/reproducibility">{() => <ResearchPage><Suspense fallback={<SecondaryRouteFallback />}><Reproducibility /></Suspense></ResearchPage>}</Route>
     <Route path="/tracks">{() => <ResearchPage><Suspense fallback={<SecondaryRouteFallback />}><Tracks /></Suspense></ResearchPage>}</Route>
     <Route path="/findings">{() => <ResearchPage><Suspense fallback={<SecondaryRouteFallback />}><Findings /></Suspense></ResearchPage>}</Route>
     <Route path="/assistant">{() => <ResearchPage><Suspense fallback={<AssistantRouteFallback />}><Assistant /></Suspense></ResearchPage>}</Route>
