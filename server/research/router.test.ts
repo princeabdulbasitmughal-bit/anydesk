@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   createReport: vi.fn(),
   getExperiment: vi.fn(),
   getLatestProtocolRevision: vi.fn(),
+  getProtocolRevision: vi.fn(),
   getDataset: vi.fn(),
   getModelConfiguration: vi.fn(),
   getRun: vi.fn(),
@@ -42,6 +43,7 @@ vi.mock("./db", () => ({
   createReport: mocks.createReport,
   getExperiment: mocks.getExperiment,
   getLatestProtocolRevision: mocks.getLatestProtocolRevision,
+  getProtocolRevision: mocks.getProtocolRevision,
   getDataset: mocks.getDataset,
   getModelConfiguration: mocks.getModelConfiguration,
   getRun: mocks.getRun,
@@ -89,6 +91,7 @@ describe("authenticated research workflows", () => {
     mocks.getRun.mockResolvedValue({ id: 12, experimentId: 4 });
     mocks.getFinding.mockResolvedValue(undefined);
     mocks.getLatestProtocolRevision.mockResolvedValue(undefined);
+    mocks.getProtocolRevision.mockResolvedValue({ id: 10, ownerId: 7, experimentId: 4, version: 1 });
     mocks.listDatasets.mockResolvedValue([]);
     mocks.listModelConfigurations.mockResolvedValue([]);
     mocks.listProtocolRevisions.mockResolvedValue([]);
@@ -109,13 +112,23 @@ describe("authenticated research workflows", () => {
     const reproducibleConfiguration = '{"learning_rate":0.001,"modelRevision":"v1.2.0","dataRevision":"hits-2026-08","randomSeed":42}';
     await caller.datasets.upload({ experimentId: 4, fileName: "hits.csv", format: "csv", base64: Buffer.from("x,y,z\n1,2,3\n").toString("base64") });
     await caller.modelConfigurations.create({ experimentId: 4, name: "Baseline", huggingFaceModelId: "lab/particle-tracker", hyperparameters: reproducibleConfiguration });
-    const run = await caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, runType: "training" });
+    const run = await caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, protocolRevisionId: 10, runType: "training" });
     expect(mocks.storagePut).toHaveBeenCalledOnce();
     expect(mocks.createDataset).toHaveBeenCalledOnce();
     expect(mocks.createModelConfiguration).toHaveBeenCalledOnce();
     expect(mocks.createModelConfiguration).toHaveBeenCalledWith(expect.objectContaining({ hyperparameters: reproducibleConfiguration }));
-    expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "training" }));
+    expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "training", protocolRevisionId: 10 }));
     expect(run).toEqual({ success: true, status: "queued" });
+  });
+
+  it("rejects a run when its requested protocol revision is not owned by the selected experiment", async () => {
+    const caller = researchRouter.createCaller(context());
+    mocks.getProtocolRevision.mockResolvedValueOnce(undefined);
+
+    await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, protocolRevisionId: 10, runType: "training" }))
+      .rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mocks.createRun).not.toHaveBeenCalled();
+    expect(mocks.getProtocolRevision).toHaveBeenCalledWith(7, 4, 10);
   });
 
   it("keeps an otherwise configured hosted run queued without submitting work when HF_TOKEN is absent", async () => {
@@ -125,7 +138,7 @@ describe("authenticated research workflows", () => {
     const caller = researchRouter.createCaller(context());
 
     try {
-      await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, runType: "inference" }))
+      await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, protocolRevisionId: 10, runType: "inference" }))
         .resolves.toEqual({ success: true, status: "queued" });
       expect(mocks.createRun).toHaveBeenCalledWith(expect.objectContaining({ status: "queued", runType: "inference" }));
       expect(mocks.hostedJobFromHyperparameters).toHaveBeenCalledOnce();
@@ -143,7 +156,7 @@ describe("authenticated research workflows", () => {
     const caller = researchRouter.createCaller(context());
 
     try {
-      await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, runType: "inference" }))
+      await expect(caller.runs.trigger({ experimentId: 4, datasetId: 8, modelConfigurationId: 9, protocolRevisionId: 10, runType: "inference" }))
         .resolves.toEqual({ success: false, status: "failed", message: "Authorization: Bearer [redacted] rejected" });
       expect(mocks.setRunStatus).toHaveBeenCalledWith(7, 12, "failed", "Authorization: Bearer [redacted] rejected");
       expect(mocks.sendTerminalRunEmail).toHaveBeenCalledWith(expect.objectContaining({ errorMessage: "Authorization: Bearer [redacted] rejected" }));

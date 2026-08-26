@@ -13,7 +13,7 @@ TrackLab is an authenticated research workspace for **high-energy particle-track
 | Dataset intake | The server accepts **CSV, JSON, and HDF5 only**, enforcing a **25 MiB** maximum; user-provided files are stored in managed object storage. |
 | Model configuration | Model identifiers and versioned hyperparameter JSON can record model revision, dataset revision, random seed, execution image, and command for reproducibility. |
 | Experiment protocols | Researchers can create append-only, experiment-scoped revisions containing their own objective, detector context, evaluation plan, and acceptance criteria before execution. |
-| Run management | Training and inference runs use exactly four states: `queued`, `running`, `completed`, and `failed`. |
+| Run management | Training and inference runs use exactly four states: `queued`, `running`, `completed`, and `failed`; new runs require an explicitly selected, owned protocol revision and retain that immutable reference. |
 | Analysis | Results display persisted accuracy, efficiency, and fake-rate metrics; 2D and 3D viewers display only persisted reconstructed track points. |
 | Findings and exports | Experiment findings support Markdown authoring with Markdown and PDF export only. |
 | Research assistant | The assistant is grounded in the authenticated user's stored experiment context. |

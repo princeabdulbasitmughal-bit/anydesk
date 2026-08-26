@@ -72,6 +72,7 @@ export const experimentRuns = mysqlTable("experimentRuns", {
   experimentId: int("experimentId").notNull(),
   datasetId: int("datasetId").notNull(),
   modelConfigurationId: int("modelConfigurationId").notNull(),
+  protocolRevisionId: int("protocolRevisionId"),
   runType: mysqlEnum("runType", ["training", "inference"]).notNull(),
   status: mysqlEnum("status", ["queued", "running", "completed", "failed"]).default("queued").notNull(),
   huggingFaceJobId: varchar("huggingFaceJobId", { length: 128 }),

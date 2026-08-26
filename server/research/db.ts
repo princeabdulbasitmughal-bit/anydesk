@@ -78,6 +78,17 @@ export async function getLatestProtocolRevision(ownerId: number, experimentId: n
   return rows[0];
 }
 
+export async function getProtocolRevision(ownerId: number, experimentId: number, protocolRevisionId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(experimentProtocolRevisions).where(and(
+    eq(experimentProtocolRevisions.ownerId, ownerId),
+    eq(experimentProtocolRevisions.experimentId, experimentId),
+    eq(experimentProtocolRevisions.id, protocolRevisionId),
+  )).limit(1);
+  return rows[0];
+}
+
 export async function createProtocolRevision(input: { ownerId: number; experimentId: number; objective: string; detectorContext: string; evaluationPlan: string; acceptanceCriteria: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");

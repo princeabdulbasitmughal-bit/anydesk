@@ -16,7 +16,7 @@ describe("experiment context isolation", () => {
 
   it("clears unsaved model and run selections when the experiment changes", () => {
     expect(modelsSource).toContain("setName(\"\"); setModelId(\"\"); setHyperparameters(\"{}\")");
-    expect(runsSource).toContain("setDatasetId(\"\"); setConfigurationId(\"\"); setReviewOpen(false); setAcknowledged(false)");
+    expect(runsSource).toContain("setDatasetId(\"\"); setConfigurationId(\"\"); setProtocolRevisionId(\"\"); setReviewOpen(false); setAcknowledged(false)");
   });
 
   it("suppresses stale mutation success feedback for another experiment", () => {

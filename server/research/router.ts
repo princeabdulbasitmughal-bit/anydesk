@@ -94,9 +94,10 @@ function readableContent(value: unknown) {
 async function getReproducibilityLedger(ownerId: number, experimentId: number) {
   const experiment = await db.getExperiment(ownerId, experimentId);
   if (!experiment) throw new TRPCError({ code: "NOT_FOUND" });
-  const [datasets, configurations, runs, finding, reports] = await Promise.all([
+  const [datasets, configurations, protocols, runs, finding, reports] = await Promise.all([
     db.listDatasets(ownerId, experimentId),
     db.listModelConfigurations(ownerId, experimentId),
+    db.listProtocolRevisions(ownerId, experimentId),
     db.listRuns(ownerId, experimentId),
     db.getFinding(ownerId, experimentId),
     db.listReports(ownerId, experimentId),
@@ -109,6 +110,7 @@ async function getReproducibilityLedger(ownerId: number, experimentId: number) {
     experiment,
     datasets,
     configurations,
+    protocols,
     runs,
     metricsByRun: Object.fromEntries(metricEntries),
     tracksByRun: Object.fromEntries(trackEntries),
@@ -185,14 +187,15 @@ export const researchRouter = router({
       const refreshed = await Promise.all(runs.map(run => refreshHostedRun(ctx.user.id, run)));
       return refreshed.filter((run): run is NonNullable<typeof run> => Boolean(run));
     }),
-    trigger: researcherProcedure.input(z.object({ experimentId: z.number().int().positive(), datasetId: z.number().int().positive(), modelConfigurationId: z.number().int().positive(), runType: z.enum(["training", "inference"]) })).mutation(async ({ ctx, input }) => {
-      const [experiment, dataset, configuration] = await Promise.all([
+    trigger: researcherProcedure.input(z.object({ experimentId: z.number().int().positive(), datasetId: z.number().int().positive(), modelConfigurationId: z.number().int().positive(), protocolRevisionId: z.number().int().positive(), runType: z.enum(["training", "inference"]) })).mutation(async ({ ctx, input }) => {
+      const [experiment, dataset, configuration, protocolRevision] = await Promise.all([
         db.getExperiment(ctx.user.id, input.experimentId),
         db.getDataset(ctx.user.id, input.experimentId, input.datasetId),
         db.getModelConfiguration(ctx.user.id, input.experimentId, input.modelConfigurationId),
+        db.getProtocolRevision(ctx.user.id, input.experimentId, input.protocolRevisionId),
       ]);
-      if (!experiment || !dataset || !configuration) throw new TRPCError({ code: "BAD_REQUEST", message: "The selected experiment, dataset, and configuration must belong together." });
-      const created = await db.createRun({ ownerId: ctx.user.id, experimentId: input.experimentId, datasetId: input.datasetId, modelConfigurationId: input.modelConfigurationId, runType: input.runType, status: "queued" });
+      if (!experiment || !dataset || !configuration || !protocolRevision) throw new TRPCError({ code: "BAD_REQUEST", message: "The selected experiment, dataset, configuration, and protocol revision must belong together." });
+      const created = await db.createRun({ ownerId: ctx.user.id, experimentId: input.experimentId, datasetId: input.datasetId, modelConfigurationId: input.modelConfigurationId, protocolRevisionId: input.protocolRevisionId, runType: input.runType, status: "queued" });
       const runId = Number(created[0].insertId);
       const token = process.env.HF_TOKEN;
       const hostedSpec = hostedJobFromHyperparameters(configuration.hyperparameters);

@@ -13,10 +13,11 @@ describe("run launch review", () => {
     expect(runsSource).toContain("trigger.mutate({");
   });
 
-  it("shows selected scientific inputs, queued state, and execution boundary", () => {
+  it("shows selected scientific inputs, protocol revision, queued state, and execution boundary", () => {
     expect(runsSource).toContain("Run launch review");
     expect(runsSource).toContain("selectedDataset?.name");
     expect(runsSource).toContain("selectedConfiguration?.name");
+    expect(runsSource).toContain("selectedProtocol?.version");
     expect(runsSource).toContain("Initial status");
     expect(runsSource).toContain("Without an owner-authorized Hugging Face token");
   });
@@ -26,5 +27,12 @@ describe("run launch review", () => {
     expect(runsSource).toContain("I confirm that this submission uses the selected dataset");
     expect(runsSource).toContain("disabled={!acknowledged || trigger.isPending}");
     expect(runsSource).toContain("Queue verified run");
+  });
+
+  it("requires an explicit saved Protocol revision and persists its identifier", () => {
+    expect(runsSource).toContain("Select a saved protocol revision");
+    expect(runsSource).toContain("no revision is chosen automatically");
+    expect(runsSource).toContain("protocolRevisionId: selectedProtocol.id");
+    expect(runsSource).toContain("setProtocolRevisionId(\"\")");
   });
 });

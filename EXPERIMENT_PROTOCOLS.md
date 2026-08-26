@@ -2,6 +2,12 @@
 
 TrackLab's **Experiment Protocols** workflow records researcher-authored intent before a training or inference run is evaluated. It is an authenticated, experiment-scoped recordkeeping feature; it does not configure remote execution, run a model, infer detector properties, or create scientific evidence.
 
+## Run provenance guard
+
+Before a future run can be queued, the researcher must explicitly select one saved revision from the active experiment. TrackLab stores that selected revision identifier with the run and confirms that the revision belongs to the same authenticated owner and experiment as the selected dataset and model configuration. No protocol revision is selected automatically, and a missing, unowned, or cross-experiment revision prevents queueing.
+
+The evidence-only Reproducibility Ledger records protocol revision identifiers and their run links, but it does not treat a protocol as an execution result or disclose the protocol's authored text in the manifest.
+
 ## Stored revision fields
 
 Every saved revision contains the following non-empty, bounded text fields:
