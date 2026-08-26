@@ -157,6 +157,27 @@ export const researchRouter = router({
       return { success: true };
     }),
   }),
+  protocols: router({
+    latest: researcherProcedure.input(z.object({ experimentId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      if (!(await db.getExperiment(ctx.user.id, input.experimentId))) throw new TRPCError({ code: "NOT_FOUND" });
+      return db.getLatestProtocolRevision(ctx.user.id, input.experimentId);
+    }),
+    list: researcherProcedure.input(z.object({ experimentId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      if (!(await db.getExperiment(ctx.user.id, input.experimentId))) throw new TRPCError({ code: "NOT_FOUND" });
+      return db.listProtocolRevisions(ctx.user.id, input.experimentId);
+    }),
+    saveRevision: researcherProcedure.input(z.object({
+      experimentId: z.number().int().positive(),
+      objective: z.string().trim().min(8).max(12_000),
+      detectorContext: z.string().trim().min(8).max(12_000),
+      evaluationPlan: z.string().trim().min(8).max(12_000),
+      acceptanceCriteria: z.string().trim().min(8).max(12_000),
+    })).mutation(async ({ ctx, input }) => {
+      if (!(await db.getExperiment(ctx.user.id, input.experimentId))) throw new TRPCError({ code: "NOT_FOUND" });
+      const version = await db.createProtocolRevision({ ownerId: ctx.user.id, ...input });
+      return { success: true, version };
+    }),
+  }),
   runs: router({
     list: researcherProcedure.input(z.object({ experimentId: z.number().int().positive().optional() })).query(async ({ ctx, input }) => {
       const runs = await db.listRuns(ctx.user.id, input.experimentId);

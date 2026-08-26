@@ -12,6 +12,7 @@ TrackLab is an authenticated research workspace for **high-energy particle-track
 | Experiment management | Researchers can create and select experiments as the organizing context for all records. |
 | Dataset intake | The server accepts **CSV, JSON, and HDF5 only**, enforcing a **25 MiB** maximum; user-provided files are stored in managed object storage. |
 | Model configuration | Model identifiers and versioned hyperparameter JSON can record model revision, dataset revision, random seed, execution image, and command for reproducibility. |
+| Experiment protocols | Researchers can create append-only, experiment-scoped revisions containing their own objective, detector context, evaluation plan, and acceptance criteria before execution. |
 | Run management | Training and inference runs use exactly four states: `queued`, `running`, `completed`, and `failed`. |
 | Analysis | Results display persisted accuracy, efficiency, and fake-rate metrics; 2D and 3D viewers display only persisted reconstructed track points. |
 | Findings and exports | Experiment findings support Markdown authoring with Markdown and PDF export only. |
@@ -31,7 +32,7 @@ Remote results require an actual `TRACKLAB_RESULT=<base64-json>` manifest from a
 | `client/src/` | React research workspace, dashboard shell, protected routes, accessible forms, and scientific visualizations. |
 | `server/research/` | tRPC research procedures, authorization enforcement, validation, Hugging Face status synchronization, result ingestion, reports, and notifications. |
 | `shared/` | Browser and server input rules, research contracts, and route-specific experiment guidance. |
-| `drizzle/` | MySQL/TiDB schema for experiments, datasets, model configurations, runs, metrics, track points, findings, and report exports. |
+| `drizzle/` | MySQL/TiDB schema for experiments, protocol revisions, datasets, model configurations, runs, metrics, track points, findings, and report exports. |
 | Managed object storage | Stores uploaded datasets, returned model artifacts, and generated report files; relational records store their metadata and references. |
 
 ## Local development and validation
@@ -70,6 +71,7 @@ No token, provider key, authorization header, or verified sender value is commit
 | --- | --- |
 | [Hugging Face execution runbook](./HUGGING_FACE_RUNBOOK.md) | Single-token activation, job contract, status mapping, result handoff, and dedicated-email boundary. |
 | [Readiness audit](./READINESS_AUDIT.md) | No-fabrication review and external-dependency boundary. |
+| [Experiment Protocols](./EXPERIMENT_PROTOCOLS.md) | Pre-execution versioning model and evidence boundary for researcher-authored protocols. |
 | [Particleflow reference revalidation](./MODEL_REFERENCE_REVALIDATION.md) | Dated public-source validation that keeps the cited reconstruction repository as a research reference rather than an assumed execution setup. |
 | [Operational readiness audit](./OPERATIONAL_READINESS_AUDIT.md) | Secret-free researcher-facing operational-state review. |
 | [Quality refinement audit](./QUALITY_REFINEMENT_AUDIT.md) | Scientific usability, clarity, and reliability refinement record. |

@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import {
   datasets,
+  experimentProtocolRevisions,
   experimentRuns,
   experiments,
   modelConfigurations,
@@ -63,6 +64,29 @@ export async function createModelConfiguration(values: typeof modelConfiguration
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   await db.insert(modelConfigurations).values(values);
+}
+
+export async function listProtocolRevisions(ownerId: number, experimentId: number) {
+  const db = await getDb();
+  return db ? db.select().from(experimentProtocolRevisions).where(and(eq(experimentProtocolRevisions.ownerId, ownerId), eq(experimentProtocolRevisions.experimentId, experimentId))).orderBy(desc(experimentProtocolRevisions.version)) : [];
+}
+
+export async function getLatestProtocolRevision(ownerId: number, experimentId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(experimentProtocolRevisions).where(and(eq(experimentProtocolRevisions.ownerId, ownerId), eq(experimentProtocolRevisions.experimentId, experimentId))).orderBy(desc(experimentProtocolRevisions.version)).limit(1);
+  return rows[0];
+}
+
+export async function createProtocolRevision(input: { ownerId: number; experimentId: number; objective: string; detectorContext: string; evaluationPlan: string; acceptanceCriteria: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.transaction(async tx => {
+    const latest = await tx.select({ version: experimentProtocolRevisions.version }).from(experimentProtocolRevisions).where(and(eq(experimentProtocolRevisions.ownerId, input.ownerId), eq(experimentProtocolRevisions.experimentId, input.experimentId))).orderBy(desc(experimentProtocolRevisions.version)).limit(1);
+    const version = (latest[0]?.version ?? 0) + 1;
+    await tx.insert(experimentProtocolRevisions).values({ ...input, version });
+    return version;
+  });
 }
 
 export async function listRuns(ownerId: number, experimentId?: number) {

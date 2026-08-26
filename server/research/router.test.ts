@@ -5,17 +5,20 @@ import { MAX_DATASET_BASE64_CHARS } from "./contracts";
 const mocks = vi.hoisted(() => ({
   createDataset: vi.fn(),
   createModelConfiguration: vi.fn(),
+  createProtocolRevision: vi.fn(),
   createRun: vi.fn(),
   setRunStatus: vi.fn(),
   saveFinding: vi.fn(),
   createReport: vi.fn(),
   getExperiment: vi.fn(),
+  getLatestProtocolRevision: vi.fn(),
   getDataset: vi.fn(),
   getModelConfiguration: vi.fn(),
   getRun: vi.fn(),
   getFinding: vi.fn(),
   listDatasets: vi.fn(),
   listModelConfigurations: vi.fn(),
+  listProtocolRevisions: vi.fn(),
   listRuns: vi.fn(),
   listMetrics: vi.fn(),
   listTrackPoints: vi.fn(),
@@ -32,17 +35,20 @@ const mocks = vi.hoisted(() => ({
 vi.mock("./db", () => ({
   createDataset: mocks.createDataset,
   createModelConfiguration: mocks.createModelConfiguration,
+  createProtocolRevision: mocks.createProtocolRevision,
   createRun: mocks.createRun,
   setRunStatus: mocks.setRunStatus,
   saveFinding: mocks.saveFinding,
   createReport: mocks.createReport,
   getExperiment: mocks.getExperiment,
+  getLatestProtocolRevision: mocks.getLatestProtocolRevision,
   getDataset: mocks.getDataset,
   getModelConfiguration: mocks.getModelConfiguration,
   getRun: mocks.getRun,
   getFinding: mocks.getFinding,
   listDatasets: mocks.listDatasets,
   listModelConfigurations: mocks.listModelConfigurations,
+  listProtocolRevisions: mocks.listProtocolRevisions,
   listRuns: mocks.listRuns,
   listMetrics: mocks.listMetrics,
   listTrackPoints: mocks.listTrackPoints,
@@ -82,14 +88,17 @@ describe("authenticated research workflows", () => {
     mocks.getModelConfiguration.mockResolvedValue({ id: 9, experimentId: 4 });
     mocks.getRun.mockResolvedValue({ id: 12, experimentId: 4 });
     mocks.getFinding.mockResolvedValue(undefined);
+    mocks.getLatestProtocolRevision.mockResolvedValue(undefined);
     mocks.listDatasets.mockResolvedValue([]);
     mocks.listModelConfigurations.mockResolvedValue([]);
+    mocks.listProtocolRevisions.mockResolvedValue([]);
     mocks.listRuns.mockResolvedValue([]);
     mocks.listMetrics.mockResolvedValue(undefined);
     mocks.listTrackPoints.mockResolvedValue([]);
     mocks.listReports.mockResolvedValue([]);
     mocks.storagePut.mockResolvedValue({ key: "research/file", url: "/manus-storage/research/file" });
     mocks.createRun.mockResolvedValue([{ insertId: 12 }]);
+    mocks.createProtocolRevision.mockResolvedValue(1);
     mocks.invokeLLM.mockResolvedValue({ choices: [{ message: { content: "No stored run metrics are available." } }] });
     mocks.hostedJobFromHyperparameters.mockReturnValue({ image: "registry.example.org/particle-tracker:latest", command: ["python", "train.py"] });
     mocks.safeJobDiagnostic.mockImplementation(error => String(error instanceof Error ? error.message : error).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").replace(/hf_[A-Za-z0-9_-]+/g, "hf_[redacted]"));
@@ -219,6 +228,47 @@ describe("authenticated research workflows", () => {
     expect(ledger.manifest.evidence.datasets).toEqual([]);
     expect(ledger.manifest.evidence.runs).toEqual([]);
     expect(ledger.manifest.missingEvidence).toContain("Dataset provenance");
+  });
+
+  it("records researcher-supplied protocol revisions without supplying scientific claims", async () => {
+    const caller = researchRouter.createCaller(context());
+    const payload = {
+      experimentId: 4,
+      objective: "Evaluate the supplied reconstruction workflow.",
+      detectorContext: "Use the researcher-provided detector context.",
+      evaluationPlan: "Review returned evidence using the stated protocol.",
+      acceptanceCriteria: "Record genuine completion evidence and limitations.",
+    };
+    mocks.createProtocolRevision.mockResolvedValueOnce(1).mockResolvedValueOnce(2);
+    const saved = await caller.protocols.saveRevision(payload);
+    const laterRevision = await caller.protocols.saveRevision({ ...payload, objective: "Evaluate a later researcher-supplied reconstruction workflow." });
+
+    expect(saved).toEqual({ success: true, version: 1 });
+    expect(laterRevision).toEqual({ success: true, version: 2 });
+    expect(mocks.createProtocolRevision).toHaveBeenCalledWith({ ownerId: 7, ...payload });
+    expect(mocks.createProtocolRevision).not.toHaveBeenCalledWith(expect.objectContaining({ accuracy: expect.anything(), efficiency: expect.anything(), fakeRate: expect.anything() }));
+  });
+
+  it("returns only the owned experiment's recorded protocol history", async () => {
+    const caller = researchRouter.createCaller(context());
+    const revision = { id: 17, ownerId: 7, experimentId: 4, version: 1, objective: "Researcher supplied objective.", detectorContext: "Researcher supplied detector context.", evaluationPlan: "Researcher supplied evaluation plan.", acceptanceCriteria: "Researcher supplied review criteria.", createdAt: new Date("2026-08-25T00:00:00.000Z") };
+    mocks.getLatestProtocolRevision.mockResolvedValue(revision);
+    mocks.listProtocolRevisions.mockResolvedValue([revision]);
+
+    await expect(caller.protocols.latest({ experimentId: 4 })).resolves.toEqual(revision);
+    await expect(caller.protocols.list({ experimentId: 4 })).resolves.toEqual([revision]);
+    expect(mocks.getLatestProtocolRevision).toHaveBeenCalledWith(7, 4);
+    expect(mocks.listProtocolRevisions).toHaveBeenCalledWith(7, 4);
+  });
+
+  it("rejects protocol requests for unowned experiments and incomplete researcher input", async () => {
+    const caller = researchRouter.createCaller(context());
+    mocks.getExperiment.mockResolvedValueOnce(undefined);
+    await expect(caller.protocols.list({ experimentId: 404 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(mocks.listProtocolRevisions).not.toHaveBeenCalled();
+
+    await expect(caller.protocols.saveRevision({ experimentId: 4, objective: "short", detectorContext: "Researcher supplied detector context.", evaluationPlan: "Researcher supplied evaluation plan.", acceptanceCriteria: "Researcher supplied review criteria." })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mocks.createProtocolRevision).not.toHaveBeenCalled();
   });
 
   it("rejects non-researcher access", async () => {

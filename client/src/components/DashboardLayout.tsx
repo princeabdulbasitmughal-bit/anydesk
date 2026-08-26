@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Bot, ChartNoAxesCombined, Database, FileText, FlaskConical, LayoutDashboard, LogOut, Orbit, PanelLeft, PlayCircle, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { Bot, ChartNoAxesCombined, ClipboardCheck, Database, FileText, FlaskConical, LayoutDashboard, LogOut, Orbit, PanelLeft, PlayCircle, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -15,6 +15,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Overview", path: "/" },
   { icon: Database, label: "Datasets", path: "/datasets" },
   { icon: FlaskConical, label: "Models", path: "/models" },
+  { icon: ClipboardCheck, label: "Protocols", path: "/protocols" },
   { icon: PlayCircle, label: "Runs", path: "/runs" },
   { icon: ChartNoAxesCombined, label: "Results", path: "/results" },
   { icon: ShieldCheck, label: "Ledger", path: "/reproducibility" },

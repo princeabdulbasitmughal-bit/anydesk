@@ -5,6 +5,7 @@ import {
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
 
@@ -52,6 +53,18 @@ export const modelConfigurations = mysqlTable("modelConfigurations", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
+export const experimentProtocolRevisions = mysqlTable("experimentProtocolRevisions", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  experimentId: int("experimentId").notNull(),
+  version: int("version").notNull(),
+  objective: text("objective").notNull(),
+  detectorContext: text("detectorContext").notNull(),
+  evaluationPlan: text("evaluationPlan").notNull(),
+  acceptanceCriteria: text("acceptanceCriteria").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [uniqueIndex("experiment_protocol_version_unique").on(table.experimentId, table.version)]);
 
 export const experimentRuns = mysqlTable("experimentRuns", {
   id: int("id").autoincrement().primaryKey(),
